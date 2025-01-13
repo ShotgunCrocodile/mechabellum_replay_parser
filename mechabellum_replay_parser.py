@@ -69,10 +69,9 @@ UNIT_LOOKUP = {
     22: "typhoon",
     23: "sandworm",
     24: "tarantula",
-    25: "death knell?",  # Maybe, not confirmed yet but would explain the gap
+    25: "phantom ray",
     26: "farseer",
-    27: "phantom ray",
-    28: "raiden",
+    27: "raiden",
 }
 
 
@@ -136,12 +135,19 @@ TECH_LOOKUP = {
 
     # Tarantula
     924: "Field Maintenance",
+    11024: "Spider Mines",
+    10224: "Range",
 
     # Typhoon
     1022: "Barrier",
 
     # Farseer
     180526: "Scanning Radar",
+    1826: "Electromagnetic Explosion",
+
+    # Raiden
+    10227: "Range",
+    4027: "Chain",
 }
 
 
