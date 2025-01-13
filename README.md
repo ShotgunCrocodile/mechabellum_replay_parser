@@ -17,7 +17,7 @@ $ python .\mechabellum_replay_parser.py 'C:\Program Files (x86)\Steam\steamapps\
 ShotgunCrocodile]VS[Opponent].grbr'
 ```
  
-And it shoudl spit out a table that looks like this:
+And it should spit out a table that looks like this:
 
 ```
 +------+-----------------------------------+----------------------------------+
@@ -98,5 +98,7 @@ And it shoudl spit out a table that looks like this:
 Theres a lot still missing so feel free to make a pull request too add something. 
 
 If you parse a replay and you get a number for a tech or specialist it would be handy if you could make a pull request to add that number to the appropriate lookup table:
+
 Techs: https://github.com/ShotgunCrocodile/mechabellum_replay_parser/blob/main/mechabellum_replay_parser.py#L79
+
 Specialists: https://github.com/ShotgunCrocodile/mechabellum_replay_parser/blob/main/mechabellum_replay_parser.py#L27
