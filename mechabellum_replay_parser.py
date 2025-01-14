@@ -1,5 +1,6 @@
 import xml.etree.ElementTree
 import xml.etree.ElementTree as ET
+import re
 import argparse
 from dataclasses import dataclass, field
 from typing import List, Optional, Union, Dict
@@ -258,6 +259,34 @@ class ResearchCenterTowerAction:
         )
 
 
+@dataclass
+class UnitDrop:
+    count: int
+    level: int
+    unit: str
+    round: int
+
+    def __repr__(self) -> str:
+        return f"Unit Drop: {self.count} level {self.level} {self.unit}"
+    @classmethod
+    def from_round_number_and_identifier(cls, round_number: int, identifier: int) -> 'UnitDrop':
+        unit_drop_data = str(identifier)
+        unit_drop_regex = re.compile('1{:02d}(?P<count>\d)(?P<level>\d)(?P<unit>\d+)'.format(round_number))
+        match = unit_drop_regex.match(unit_drop_data)
+        if match is None:
+            print(round_number, identifier, unit_drop_regex)
+        data = {
+            k: int(v)
+            for (k, v) in match.groupdict().items()
+        }
+        data['unit'] = UNIT_LOOKUP.get(data['unit'])
+        data['round'] = round_number
+        return cls(**data)
+
+    @classmethod
+    def from_xml(cls, round_number: int, action_element: xml.etree.ElementTree.Element):
+        return cls.from_round_number_and_identifier(round_number, int(action_element.find("ID").text))
+
 PlayerAction = Union[
     BuyAction,
     UnlockAction,
@@ -266,12 +295,15 @@ PlayerAction = Union[
     UpgradeAction,
     ResearchCenterTowerAction,
     CommandCenterTowerAction,
+    UnitDrop,
 ]
 
 
 def create_action_from_xml_element(
     action_element: xml.etree.ElementTree.Element,
     units: Dict[int, str],
+    round_number: int,
+    reinforce_rounds: List[int],
 ) -> Optional[PlayerAction]:
     action_type = action_element.get("{http://www.w3.org/2001/XMLSchema-instance}type")
     if action_type == "PAD_BuyUnit":
@@ -288,6 +320,8 @@ def create_action_from_xml_element(
         return CommandCenterTowerAction.from_xml(action_element)
     elif action_type == "PAD_ActiveBlueprint":
         return ResearchCenterTowerAction.from_xml(action_element)
+    elif action_type == "PAD_ChooseReinforceItem" and round_number in reinforce_rounds:
+        return UnitDrop.from_xml(round_number, action_element)
 
     return None
 
@@ -333,6 +367,12 @@ def parse_battle_record(file_path) -> BattleRecord:
     # Parse the XML content
     root = ET.fromstring(xml_content)
 
+    # Find the unit drop rounds
+    reinforce_rounds = [
+        int(node.text) for node in
+        root.find("matchDatas/MatchSnapshotData/unitReinforceRounds").findall("int")
+    ]
+
     # Navigate to player records
     player_records_element = root.find("playerRecords")
     if player_records_element is None:
@@ -361,7 +401,7 @@ def parse_battle_record(file_path) -> BattleRecord:
                     starting_units = _parse_round_units(round_element)
                     starting_officer = _parse_round_officers(round_element)[0]
 
-                action_records = _parse_actions(round_element)
+                action_records = _parse_actions(round_element, round_number, reinforce_rounds)
                 round_records.append(PlayerRoundRecord(round=round_number, actions=action_records))
 
         player_records.append(PlayerRecord(
@@ -375,13 +415,13 @@ def parse_battle_record(file_path) -> BattleRecord:
     return BattleRecord(player_records=player_records)
 
 
-def _parse_actions(round_element: xml.etree.ElementTree.Element):
+def _parse_actions(round_element: xml.etree.ElementTree.Element, round_number: int, reinforce_rounds: List[int]):
     action_records = []
     units = _parse_round_units(round_element)
 
     for action_element in round_element.findall("actionRecords/MatchActionData"):
 
-        action = create_action_from_xml_element(action_element, units)
+        action = create_action_from_xml_element(action_element, units, round_number, reinforce_rounds)
         if action is not None:
             action_records.append(action)
 
