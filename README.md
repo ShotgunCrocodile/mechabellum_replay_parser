@@ -13,8 +13,7 @@ python -m pip install -r requirements.txt
 Once you have the dependencies in your python environment you can point it at a replay file like so:
 
 ```
-$ python .\mechabellum_replay_parser.py 'C:\Program Files (x86)\Steam\steamapps\common\Mechabellum\ProjectDatas\Replay\1475_20250110--134322461_[Rev
-ShotgunCrocodile]VS[Opponent].grbr'
+$ python .\mechabellum_replay_parser.py 'C:\Program Files (x86)\Steam\steamapps\common\Mechabellum\ProjectDatas\Replay\1475_20250110--134322461_[ShotgunCrocodile]VS[Opponent].grbr'
 ```
  
 And it should spit out a table that looks like this:
@@ -79,7 +78,7 @@ And it should spit out a table that looks like this:
 |      | Buy arclight                      | Tech fortress Barrier            |
 |      | Upgrade typhoon                   | Command Tower High Mobility      |
 +------+-----------------------------------+----------------------------------+
-|      | Device Shield Generator           | Buy fortress                     |
+| 7    | Device Shield Generator           | Buy fortress                     |
 |      | Upgrade arclight                  | Buy fortress                     |
 |      | Upgrade wasp                      | Command Tower Mass Recruit       |
 |      | Tech wasp Range                   | Buy mustang                      |
