@@ -273,8 +273,6 @@ class UnitDrop:
         unit_drop_data = str(identifier)
         unit_drop_regex = re.compile('1{:02d}(?P<count>\d)(?P<level>\d)(?P<unit>\d+)'.format(round_number))
         match = unit_drop_regex.match(unit_drop_data)
-        if match is None:
-            print(round_number, identifier, unit_drop_regex)
         data = {
             k: int(v)
             for (k, v) in match.groupdict().items()
@@ -286,6 +284,7 @@ class UnitDrop:
     @classmethod
     def from_xml(cls, round_number: int, action_element: xml.etree.ElementTree.Element):
         return cls.from_round_number_and_identifier(round_number, int(action_element.find("ID").text))
+
 
 PlayerAction = Union[
     BuyAction,
