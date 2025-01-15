@@ -96,8 +96,11 @@ And it should spit out a table that looks like this:
 
 Theres a lot still missing so feel free to make a pull request too add something. 
 
-If you parse a replay and you get a number for a tech or specialist it would be handy if you could make a pull request to add that number to the appropriate lookup table:
+If you parse a replay and you get a number for a tech it would be handy if you could make a pull request to add that number to the appropriate lookup table:
 
 Techs: https://github.com/ShotgunCrocodile/mechabellum_replay_parser/blob/main/mechabellum_replay_parser.py#L79
 
-Specialists: https://github.com/ShotgunCrocodile/mechabellum_replay_parser/blob/main/mechabellum_replay_parser.py#L27
+# Similar Projects
+
+IcyD kindly pointed me to their similar project here: https://github.com/IcyIcyD/MechabellumReplayParser where I got a lot of the IDs from.
+
