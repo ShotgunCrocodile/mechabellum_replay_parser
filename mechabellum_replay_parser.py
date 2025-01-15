@@ -26,15 +26,162 @@ RESEARCH_TOWER_SKILLS = {
 
 
 OFFICER_LOOKUP = {
-    10014: "Training Specialist",
-    20032: "Elite Specialist",
+    # Starting Specialists
     10002: "Supply Specialist",
-    20029: "Marksman Specialist",
-    20039: "Typhoon Specialist",
+    10010: "Quick Supply Specialist",
+    10011: "Missile Specialist",
     10013: "Amplify Specialist",
+    10014: "Training Specialist",
+    20005: "Giant Specialist",
+    20021: "Aerial Specialist",
+    20024: "Speed Specialist",
+    20029: "Marksman Specialist",
+    20032: "Elite Specialist",
     20036: "Sabertooth Specialist",
     20037: "Farseer Specialist",
-    20021: "Aerial Specialist",
+    20033: "Rhino Specialist",
+    20034: "Cost Control Specialist",
+    20035: "Heavy Armor Specialist",
+    20036: "Sabertooth Specialist",
+    20038: "Fire Badger Specialist",
+    20039: "Typhoon Specialist",
+
+    # Other "officers" which are a combination of
+    # unit upgrade cards and what used to be specialists.
+    10001: "Quick Cooldown",
+    10003: "Super Supply Enhancement",
+    10004: "Additional Deployment Slot",
+    10007: "Advanced Shield Device",
+    10008: "Advanced Missile Device",
+    10009: "Quick Teleport",
+    20001: "Advanced Defense Tactics",
+    20002: "Advanced Offensive Tactics",
+    20003: "Efficient Tech Research",
+    20004: "Advanced Power System",
+    20006: "Advanced Targeting System",
+    20007: "Supply Enhancement",
+    20022: "Efficient Giant Manufacturing",
+    20023: "Efficient Light Manufacturing",
+    30101: "Mass Produced Fortress",
+    30102: "Assault Fortress",
+    30104: "Improved Fortress",
+    30105: "Extended Range Fortress",
+    30201: "Extended Range Marksman",
+    30202: "Smart Marksman",
+    30203: "Subsidized Marksman",
+    30204: "Elite Marksman",
+    30301: "Extended Range Vulcan",
+    30302: "Assault Vulcan",
+    30401: "Assault Melting Point",
+    30402: "Improved Melting Point",
+    30403: "Mass Produced Melting Point",
+    30501: "Mass Produced Rhino",
+    30502: "Berserk Rhino",
+    30503: "Elite Rhino",
+    30601: "Mass Produced Wasp",
+    30602: "Improved Wasp",
+    30604: "Elite Wasp",
+    30701: "Subsidized Mustang",
+    30702: "Fortified Mustang",
+    30703: "Elite Mustang",
+    30801: "Subsidized Steel Ball",
+    30803: "Improved Steel Ball",
+    30804: "Elite Steel Ball",
+    30901: "Elite Fang",
+    30902: "Assault Fang",
+    31001: "Subsidized Crawler",
+    31002: "Elite Crawler",
+    31101: "Fortified Overlord",
+    31102: "Mass Produced Overlord",
+    31104: "Improved Overlord",
+    31201: "Assault Stormcaller",
+    31202: "Extended Range Stormcaller",
+    31203: "Subsidized Stormcaller",
+    31301: "Mass Produced Sledgehammer",
+    31302: "Extended Range Sledgehammer",
+    31304: "Improved Sledgehammer",
+    31305: "Elite Sledgehammer",
+    31402: "Fortified Hacker",
+    31403: "Elite Hacker",
+    31501: "Subsidized Arclight",
+    31502: "Smart Arclight",
+    31503: "Fortified Arclight",
+    31504: "Extended Range Arclight",
+    31601: "Mass Produced Phoenix",
+    31602: "Extended Range Phoenix",
+    31603: "Improved Phoenix",
+    31604: "Elite Phoenix",
+    31701: "Extended Range War Factory",
+    31702: "Improved War Factory",
+    31801: "Mass Produced Wraith",
+    31802: "Improved Wraith",
+    31901: "Assault Scorpion",
+    31902: "Mass Produced Scorpion",
+    31903: "Improved Scorpion",
+    32301: "Improved Sandworm",
+    32302: "Mass Produced Sandworm",
+    32401: "Improved Tarantula",
+    32402: "Elite Tarantula",
+    32501: "Extended Range Phantom Ray",
+}
+
+
+SKILL_LOOKUP = {
+    100001: "Redeployment",
+    100002: "Incendiary Bomb",
+    200001: "Electromagnetic Impact",
+    200002: "Electromagnetic Blast",
+    200003: "Photon Emission",
+    300001: "Missile Strike",
+    300003: "Orbital Bombardment",
+    300004: "Nuke",
+    300005: "Lightning Storm",
+    300006: "Ion Blast",
+    300007: "Orbital Javelin",
+    400002: "Sticky Oil Bomb Tower",
+    400003: "Sticky Oil Bomb Spell",
+    500002: "Acid Blast",
+    600002: "Smoke Bomb",
+    800001: "Shield Airdrop",
+    900001: "Field Recovery",
+    1100001: "Intensive Training",
+    1200001: "Underground Threat",
+    1200002: "Rhino Assault",
+    1200003: "Wasp Swarm",
+    1200004: "Mobilize Battleship",
+    1200005: "Vulcan's Descent",
+    1500001: "Mobile Beacon Tower",
+    1500002: "Mobile Beacon Spell",
+}
+
+
+ITEM_LOOKUP = {
+    1305003: "Photon Coating",
+    1306001: "Tank Production Line",
+    1306002: "Mustang Production Line",
+    1306003: "Steel Ball Production Line",
+    1307001: "Barrier",
+    1308001: "Anti Interference Module",
+    1309001: "Absorption Module",
+    13010001: "Portable Shield",
+    13020001: "Nano Repair Kit",
+    13030001: "Laser Sights",
+    13030002: "Heavy Armor",
+    13030003: "Improved Firepower Control System",
+    13030004: "Enhancement Module",
+    13030005: "Haste Module",
+    13030006: "Super Heavy Armor",
+    13030007: "Amplifying Core",
+    13040001: "Deployment Module",
+}
+
+
+# Pool of all reinforcement card selections a player can make not including unit reinforcements.
+CARD_LOOKUP = {
+    0: "Skip",
+    **ITEM_LOOKUP,
+    **SKILL_LOOKUP,
+    **OFFICER_LOOKUP,
 }
 
 
@@ -77,77 +224,234 @@ UNIT_LOOKUP = {
 
 
 TECH_LOOKUP = {
-    # Wasp
-    10206: "Range",
-    406: "High Explosive Ammo",
-    3206: "Aerial Specialization",
-    206: "Energy Shield",
-    506: "Ground Specialization",
+    # Crawler techs
+    10510: "Mechanical rage",
+    180110: "Replicate",
+    2610: "Subterranean blitz",
+    2710: "Acidic explosion",
+    10710: "Impact drill",
+    3510: "Loose formation",
 
-    # Arclight
-    10215: "Range",
-    10915: "Charged shot",
-    3115: "Anti-Aircraft Ammunition",
+    # Fang techs
+    180209: "Ignite",
+    10209: "Range enhancement",
+    10509: "Mechanical rage",
+    209: "Portable shield",
+    10609: "Armor piercing bullets",
 
-    # Scorpion
-    10219: "Range",
-
-    # Overlord
-    180311: "Photon Emission",
-
-    # Rhino
-    3005: "Armor",
-
-    # Fortress
-    1105: "Anti Air Barrage",
+    # Fortress techs
     1001: "Barrier",
+    10201: "Range enhancement",
+    1105: "Anti air barrage",
+    1201: "Fang production",
+    10301: "Launcher overload",
+    10801: "Elite marksman",
+    701: "Doubleshot",
+    3001: "Armor enhancement",
+    110201: "Rocket punch",
 
-    # Mustang
-    10207: "Range",
-    3207: "Aerial Specialization",
-    3307: "Missile Interceptor",
+    # Marksman techs
+    702: "Doubleshot",
+    10202: "Range enhancement",
+    10402: "Quick reload",
+    1802: "Electromagnetic shot",
+    10802: "Elite marksman",
+    1202: "Shooting squad",
+    10102: "Assault mode",
+    3202: "Aerial specialisation",
 
-    # Steel ball
-    1308: "Mechanical Division",
+    # Vulcan techs
+    180203: "Ignite",
+    10203: "Range enhancement",
+    1103: "Incendiary bomb",
+    10603: "Scorching fire",
+    1203: "Best partner",
+    11010: "Sticky oil bomb",
+    3003: "Armor enhancement",
 
-    # Sabertooth
+    # Melting point techs
+    304: "Energy absorption",
+    10204: "Range enhancement",
+    1107: "Energy diffraction",
+    1106: "Electromagnetic barrage",
+    1204: "Crawler production",
+    3004: "Armor enhancement",
+
+    # Rhino techs
+    1109: "Whirlwind",
+    180305: "Photon coating",
+    905: "Field maintenance",
+    2805: "Final blitz",
+    10505: "Mechanical rage",
+    2305: "Wreckage recycling",
+    2505: "Power armor",
+    3005: "Armor enhancement",
+
+    # Wasp techs
+    206: "Energy shield",
+    10206: "Range enhancement",
+    1606: "Jump drive",
+    506: "Ground specialization",
+    10806: "Elite marksman",
+    180206: "Ignite",
+    1806: "Electromagnetic shot",
+    406: "High explosive ammo",
+    10606: "Armor piercing bullets",
+    3206: "Aerial specialization",
+
+    # Mustang techs
+    3307: "Missile interceptor",
+    10207: "Range enhancement",
+    407: "High explosive ammo",
+    3207: "Aerial specialization",
+    10607: "Armor piercing bullets",
+
+    # Steel ball techs
+    308: "Energy absorption",
+    608: "Damage sharing",
+    10208: "Range enhancement",
+    1308: "Mechanical division",
+    3008: "Armor enhancement",
+    2408: "Fortified target lock",
+
+    # Overlord techs
+    1108: "Overlord artillery",
+    10311: "Launcher overload",
+    1211: "Mothership",
+    1611: "Jump drive",
+    180311: "Photon emission",
+    10211: "Range enhancement",
+    3011: "Armor enhancement",
+    911: "Field maintenance",
+    411: "High explosive ammo",
+
+    # Stormcaller techs
+    812: "Incendiary bomb",
+    10212: "Range enhancement",
+    10312: "Launcher overload",
+    412: "High explosive ammo",
+    1812: "Electromagnetic explosion",
+    10912: "High explosive anti tank shells",
+
+    # Sledgehammer techs
+    913: "Field maintenance",
+    613: "Damage sharing",
+    10513: "Mechanical rage",
+    10213: "Range enhancement",
+    1813: "Electromagnetic shot",
+    10613: "Armor piercing bullets",
+    3013: "Armor enhancement",
+
+    # Hacker techs
+    11014: "Multi control",
+    1014: "Barrier",
+    10214: "Range enhancement",
+    1714: "Enhanced control",
+    1814: "Electromagnetic interference",
+
+    # Arclight techs
+    10215: "Range enhancement",
+    1815: "Electromagnetic shot",
+    10915: "Charged shot",
+    3015: "Armor enhancement",
+    3115: "Anti aircraft ammunition",
+    10815: "Elite marksman",
+
+    # Phoenix techs
+    2916: "Quantum reassembly",
+    10216: "Range enhancement",
+    10316: "Launcher overload",
+    216: "Energy shield",
+    1616: "Jump drive",
+    1816: "Electromagnetic shot",
+    10816: "Elite marksman",
+    10916: "Charged shot",
+
+    # War factory techs
+    10217: "Range enhancement",
+    3417: "Efficient maintenance",
+    12017: "Phoenix production",
+    12117: "Steel ball production",
+    12217: "Sledgehammer production",
+    3317: "Missile interceptor",
+    10317: "Launcher overload",
+    180317: "Photon coating",
+    3017: "Armor enhancement",
+    417: "High explosive ammo",
+
+    # Wraith techs
+    110181: "Floating artillery array",
+    10218: "Range enhancement",
+    3018: "Armor enhancement",
+    180418: "Degeneration beam",
+    918: "Field maintenance",
+    418: "High explosive ammo",
+
+    # Scorpion techs
+    180519: "Acid attack",
+    10019: "Siege mode",
+    10219: "Range enhancement",
+    719: "Doubleshot",
+    919: "Field maintenance",
+    3019: "Armor enhancement",
+
+    # Fire badger techs
+    10220: "Range enhancement",
+    820: "Napalm",
+    180220: "Ignite",
+    920: "Field maintenance",
+    10620: "Scorching fire",
+
+    # Sabertooth techs
+    10221: "Range enhancement",
+    10321: "Field maintenance",
     3321: "Missile interceptor",
+    721: "Doubleshot",
 
-    # Marksmen
-    10202: "Range",
-
-    # Melting Point
-    10204: "Range",
-    1107: "Energy Diffraction",
-
-    # Stormcaller
-    10212: "Range",
-    812: "Incendiary Bomb",
-    1812: "Electromagnetic Explosion",
-
-    # Crawler
-    10710: "Impact Drill",
-    10510: "Mechanical Rage",
-    2610: "Subterranean Blitz",
-
-    # Fang
-    10209: "Range",
-    10509: "Mechanical Rage",
-
-    # Tarantula
-    924: "Field Maintenance",
-    11024: "Spider Mines",
-    10224: "Range",
-
-    # Typhoon
+    # Typhoon techs
+    3022: "Mechanical rage",
+    3222: "Aerial specialisation",
     1022: "Barrier",
+    11022: "Homing missile",
 
-    # Farseer
-    180526: "Scanning Radar",
-    1826: "Electromagnetic Explosion",
+    # Sandworm techs
+    10523: "Mechanical rage",
+    3023: "Armor enhancement",
+    13023: "Mechanical division",
+    3123: "Anti aerial",
+    923: "Burrow maintenance",
+    3623: "Replicate",
+    3723: "Sandstorm",
+    3823: "Strike",
 
-    # Raiden
-    10227: "Range",
+    # Tarantula techs
+    11024: "Spider mine",
+    10224: "Range enhancement",
+    10524: "Mechanical rage",
+    10624: "Armor piercing bullets",
+    924: "Field maintenance",
+    3024: "Armor enhancement",
+    3124: "Anti aircraft ammunition",
+    424: "High explosive ammo",
+
+    # Farseer techs
+    180326: "Photon emission",
+    180526: "Scanning radar",
+    3326: "Missile interceptor",
+    1826: "Electromagnetic explosion",
+    10226: "Range enhancement",
+
+    # Phantom ray techs
+    725: "Burst mode",
+    10225: "Range enhancement",
+    3025: "Armor enhancement",
+    11025: "Sticky oil bomb",
+    3925: "Stealth cloak",
+    425: "High explosive ammo",
+    225: "Energy shield",
+
+    # Raiden techs
+    10227: "Range enhancement",
     4027: "Chain",
 }
 
@@ -286,6 +590,20 @@ class UnitDrop:
         return cls.from_round_number_and_identifier(round_number, int(action_element.find("ID").text))
 
 
+@dataclass
+class ReinforcementSelection:
+    card_name: str
+
+    def __str__(self) -> str:
+        return f"Select Card: {self.card_name}"
+
+    @classmethod
+    def from_xml(cls, action_element: xml.etree.ElementTree.Element):
+        ident = int(action_element.find("ID").text)
+        card_name = CARD_LOOKUP.get(ident, ident)
+        return cls(card_name=card_name)
+
+
 PlayerAction = Union[
     BuyAction,
     UnlockAction,
@@ -295,6 +613,7 @@ PlayerAction = Union[
     ResearchCenterTowerAction,
     CommandCenterTowerAction,
     UnitDrop,
+    ReinforcementSelection,
 ]
 
 
@@ -321,6 +640,8 @@ def create_action_from_xml_element(
         return ResearchCenterTowerAction.from_xml(action_element)
     elif action_type == "PAD_ChooseReinforceItem" and round_number in reinforce_rounds:
         return UnitDrop.from_xml(round_number, action_element)
+    elif action_type == "PAD_ChooseReinforceItem":
+        return ReinforcementSelection.from_xml(action_element)
 
     return None
 
@@ -349,9 +670,13 @@ def extract_xml(file_path) -> str:
     with open(file_path, 'rb') as file:
         content = file.read()
 
-    # Locate the XML start and end tags
+    # Locate the XML start and end of the XML embedded in the binary file.
     start = content.find(b'<?xml')
-    end = content.rfind(b'>') + 1
+    # The name of the players appears in the footer of the file in binary. If we just search for > a player name with
+    # > in it will be found and give us incorrect xml boundaries. We search for BattleRecord> instead to give a more
+    # unique sentinel value to look for. If a player has that in their name they deserve to have their
+    # replays be un-parsable.
+    end = content.rfind(b'BattleRecord>') + 13
     if start == -1 or end == -1:
         raise ValueError("No XML content found in the file.")
 
