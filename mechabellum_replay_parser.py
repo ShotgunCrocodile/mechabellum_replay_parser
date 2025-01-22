@@ -22,6 +22,8 @@ RESEARCH_TOWER_SKILLS = {
     3: "Mobile Beacon",
     4: "Attack Enhancement",
     5: "Defence Enhancement",
+    401: "Attack Enhancement II",
+    501: "Defense Enhancement II",
 }
 
 
@@ -649,6 +651,7 @@ def create_action_from_xml_element(
 @dataclass
 class PlayerRoundRecord:
     round: int
+    player_hp: int
     actions: List[PlayerAction] = field(default_factory=list)
 
 
@@ -715,6 +718,7 @@ def parse_battle_record(file_path) -> BattleRecord:
         if round_records_element is not None:
             for round_element in round_records_element.findall("PlayerRoundRecord"):
                 round_number = int(round_element.find("round").text)
+                player_hp = int(round_element.find("playerData/reactorCore").text)
 
                 # The information about your starting pack is entirely determined by the seed
                 # and the index of which option you picked and is simulated in-game. So
@@ -726,7 +730,11 @@ def parse_battle_record(file_path) -> BattleRecord:
                     starting_officer = _parse_round_officers(round_element)[0]
 
                 action_records = _parse_actions(round_element, round_number, reinforce_rounds)
-                round_records.append(PlayerRoundRecord(round=round_number, actions=action_records))
+                round_records.append(PlayerRoundRecord(
+                    round=round_number,
+                    player_hp=player_hp,
+                    actions=action_records,
+                ))
 
         player_records.append(PlayerRecord(
             id=player_id,
@@ -794,6 +802,13 @@ def _battle_record_to_string(battle_record: BattleRecord) -> str:
         for player in battle_record.player_records:
             player_actions = []
             if round_idx < len(player.round_records):
+
+                # Grab the player HP and put it at the top of the list of actions for the round.
+                player_hp = str(player.round_records[round_idx].player_hp)
+                player_hp_line = f"HP: {player_hp}"
+                player_actions.append(player_hp_line)
+
+                # Collect all the remaining player actions
                 for action in player.round_records[round_idx].actions:
                     player_actions.append(str(action))
 
