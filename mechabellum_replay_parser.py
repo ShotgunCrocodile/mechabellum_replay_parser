@@ -606,6 +606,20 @@ class ReinforcementSelection:
         return cls(card_name=card_name)
 
 
+@dataclass
+class SkillAction:
+    skill_name: str
+
+    def __str__(self) -> str:
+        return f"Use Skill: {self.skill_name}"
+
+    @classmethod
+    def from_xml(cls, action_element: xml.etree.ElementTree.Element):
+        ident = int(action_element.find("ID").text)
+        skill_name = SKILL_LOOKUP.get(ident, ident)
+        return cls(skill_name=skill_name)
+
+
 PlayerAction = Union[
     BuyAction,
     UnlockAction,
@@ -616,6 +630,7 @@ PlayerAction = Union[
     CommandCenterTowerAction,
     UnitDrop,
     ReinforcementSelection,
+    SkillAction,
 ]
 
 
@@ -644,6 +659,8 @@ def create_action_from_xml_element(
         return UnitDrop.from_xml(round_number, action_element)
     elif action_type == "PAD_ChooseReinforceItem":
         return ReinforcementSelection.from_xml(action_element)
+    elif action_type == "PAD_ReleaseCommanderSkill":
+        return SkillAction.from_xml(action_element)
 
     return None
 
@@ -656,12 +673,38 @@ class PlayerRoundRecord:
 
 
 @dataclass
+class DeploymentTracker:
+    count: List[int] = field(default_factory=list)
+
+    @classmethod
+    def from_record_list(cls, records: List[PlayerRoundRecord]) -> 'DeploymentTracker':
+        deployments_per_turn = []
+        deployment_total = 5
+        for record in records:
+            for action in record.actions:
+                if isinstance(action, BuyAction):
+                    deployment_total += 1
+                elif isinstance(action, SkillAction) and action == SkillAction("Field Recovery"):
+                    deployment_total -= 1
+                elif isinstance(action, UnitDrop):
+                    deployment_total += action.count
+            deployments_per_turn.append(deployment_total)
+        return cls(count=deployments_per_turn)
+
+
+@dataclass
 class PlayerRecord:
     id: str
     name: str
     round_records: List[PlayerRoundRecord] = field(default_factory=list)
     starting_officer: Optional[str] = None
     starting_units: List[int] = field(default_factory=list)
+    deployments: Optional[DeploymentTracker] = None
+
+    def __post_init__(self):
+        if self.deployments is None:
+            self.deployments = DeploymentTracker.from_record_list(self.round_records)
+
 
 @dataclass
 class BattleRecord:
@@ -811,6 +854,11 @@ def _battle_record_to_string(battle_record: BattleRecord) -> str:
                 # Collect all the remaining player actions
                 for action in player.round_records[round_idx].actions:
                     player_actions.append(str(action))
+
+                # Grab the deployment count and put it at the bottom of the list of actions.
+                deployments = str(player.deployments.count[round_idx])
+                deployments_line = f"Deployment Total: {deployments}"
+                player_actions.append(deployments_line)
 
             players_actions.append("\n".join(player_actions))
 
