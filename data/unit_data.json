@@ -1,0 +1,137 @@
+{
+    "fortress": {
+        "ident": 1,
+        "name": "fortress",
+        "value": 400
+    },
+    "marksmen": {
+        "ident": 2,
+        "name": "marksmen",
+        "value": 100
+    },
+    "vulcan": {
+        "ident": 3,
+        "name": "vulcan",
+        "value": 400
+    },
+    "melting point": {
+        "ident": 4,
+        "name": "melting point",
+        "value": 400
+    },
+    "rhino": {
+        "ident": 5,
+        "name": "rhino",
+        "value": 200
+    },
+    "wasp": {
+        "ident": 6,
+        "name": "wasp",
+        "value": 200
+    },
+    "mustang": {
+        "ident": 7,
+        "name": "mustang",
+        "value": 200
+    },
+    "steel ball": {
+        "ident": 8,
+        "name": "steel ball",
+        "value": 200
+    },
+    "fang": {
+        "ident": 9,
+        "name": "fang",
+        "value": 100
+    },
+    "crawler": {
+        "ident": 10,
+        "name": "crawler",
+        "value": 100
+    },
+    "overlord": {
+        "ident": 11,
+        "name": "overlord",
+        "value": 500
+    },
+    "stormcaller": {
+        "ident": 12,
+        "name": "stormcaller",
+        "value": 200
+    },
+    "sledgehammer": {
+        "ident": 13,
+        "name": "sledgehammer",
+        "value": 200
+    },
+    "hacker": {
+        "ident": 14,
+        "name": "hacker",
+        "value": 200
+    },
+    "arclight": {
+        "ident": 15,
+        "name": "arclight",
+        "value": 100
+    },
+    "phoenix": {
+        "ident": 16,
+        "name": "phoenix",
+        "value": 200
+    },
+    "warfactory": {
+        "ident": 17,
+        "name": "warfactory",
+        "value": 800
+    },
+    "wraith": {
+        "ident": 18,
+        "name": "wraith",
+        "value": 300
+    },
+    "scorpion": {
+        "ident": 19,
+        "name": "scorpion",
+        "value": 300
+    },
+    "fire badger": {
+        "ident": 20,
+        "name": "fire badger",
+        "value": 200
+    },
+    "sabertooth": {
+        "ident": 21,
+        "name": "sabertooth",
+        "value": 200
+    },
+    "typhoon": {
+        "ident": 22,
+        "name": "typhoon",
+        "value": 300
+    },
+    "sandworm": {
+        "ident": 23,
+        "name": "sandworm",
+        "value": 400
+    },
+    "tarantula": {
+        "ident": 24,
+        "name": "tarantula",
+        "value": 200
+    },
+    "phantom ray": {
+        "ident": 25,
+        "name": "phantom ray",
+        "value": 200
+    },
+    "farseer": {
+        "ident": 26,
+        "name": "farseer",
+        "value": 300
+    },
+    "raiden": {
+        "ident": 27,
+        "name": "raiden",
+        "value": 400
+    }
+}

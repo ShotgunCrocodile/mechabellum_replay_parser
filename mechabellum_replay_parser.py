@@ -1,10 +1,21 @@
 import xml.etree.ElementTree
 import xml.etree.ElementTree as ET
 import re
+import json
 import argparse
 from dataclasses import dataclass, field
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Union, Dict, Any
 from prettytable import PrettyTable, ALL
+from pathlib import Path
+
+
+HERE = Path(__file__)
+DATA_DIR = HERE.parent / "data"
+
+
+def _load_data_file(name: str) -> dict[str, Any]:
+    with open(DATA_DIR / name) as filepath:
+        return json.load(filepath)
 
 
 COMMAND_TOWER_SKILLS = {
@@ -223,6 +234,9 @@ UNIT_LOOKUP = {
     26: "farseer",
     27: "raiden",
 }
+
+
+UNIT_DATA = _load_data_file("unit_data.json")
 
 
 TECH_LOOKUP = {
@@ -525,8 +539,6 @@ class UpgradeAction:
         # typically its out of bounds by 1 past the last unit. Buying and selling may shift
         # the unit data and I am not accounting for that. Upgrades done at the beginning of a turn
         # seem to always be correct.
-        # This might not be entirely simulatable since we don't know what unit drops contained without
-        # looking ahead to the next round.
         unit_id = int(action_element.find("UIDX").text)
         return cls(
             unit=units.get(unit_id, unit_id),
@@ -675,21 +687,47 @@ class PlayerRoundRecord:
 @dataclass
 class DeploymentTracker:
     count: List[int] = field(default_factory=list)
+    # Value here encompasses the unit purchase cost only. Upgrades and tech not included yet.
+    # TODO add tech tracker
+    # TODO add upgrade cost tracking
+    value: List[int] = field(default_factory=list)
 
     @classmethod
     def from_record_list(cls, records: List[PlayerRoundRecord]) -> 'DeploymentTracker':
-        deployments_per_turn = []
-        deployment_total = 5
-        for record in records:
+        tracker = cls(count=[5], value=[700])
+        for round_number, record in enumerate(records):
             for action in record.actions:
                 if isinstance(action, BuyAction):
-                    deployment_total += 1
+                    tracker.buy(round_number, action)
                 elif isinstance(action, SkillAction) and action == SkillAction("Field Recovery"):
-                    deployment_total -= 1
+                    tracker.sell(round_number, action)
                 elif isinstance(action, UnitDrop):
-                    deployment_total += action.count
-            deployments_per_turn.append(deployment_total)
-        return cls(count=deployments_per_turn)
+                    tracker.process_unit_drop(round_number, action)
+        return tracker
+
+    def _ensure_round_number(self, round_number: int):
+        if round_number >= len(self.count):
+            self.count.append(0)
+        if round_number >= len(self.value):
+            self.value.append(self.value[round_number - 1])
+
+    def buy(self, round: int, buy: BuyAction):
+        self._ensure_round_number(round)
+
+        self.count[round] += 1
+        self.value[round] += UNIT_DATA.get(buy.unit).get("value")
+
+    def sell(self, round: int, sell: SkillAction):
+        self._ensure_round_number(round)
+
+        self.count[round] += 1
+        # TODO figure out how to get the unit being sold's value here (upgrades etc)
+
+    def process_unit_drop(self, round: int, drop: UnitDrop):
+        self._ensure_round_number(round)
+
+        self.count[round] += drop.count
+        self.value[round] += drop.count * UNIT_DATA.get(drop.unit).get("value")
 
 
 @dataclass
@@ -859,6 +897,10 @@ def _battle_record_to_string(battle_record: BattleRecord) -> str:
                 deployments = str(player.deployments.count[round_idx])
                 deployments_line = f"Deployment Total: {deployments}"
                 player_actions.append(deployments_line)
+
+                # Get the value of units on board total for each turn
+                value_on_board = str(player.deployments.value[round_idx])
+                player_actions.append(f"Value on board: {value_on_board}")
 
             players_actions.append("\n".join(player_actions))
 
