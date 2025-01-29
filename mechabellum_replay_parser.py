@@ -8,7 +8,6 @@ from typing import List, Optional, Union, Dict, Any
 from prettytable import PrettyTable, ALL
 from pathlib import Path
 
-
 HERE = Path(__file__)
 DATA_DIR = HERE.parent / "data"
 
@@ -26,7 +25,6 @@ COMMAND_TOWER_SKILLS = {
     6: "High Mobility",
 }
 
-
 RESEARCH_TOWER_SKILLS = {
     1: "Oil Bomb",
     2: "Field Recovery",
@@ -36,7 +34,6 @@ RESEARCH_TOWER_SKILLS = {
     401: "Attack Enhancement II",
     501: "Defense Enhancement II",
 }
-
 
 OFFICER_LOOKUP = {
     # Starting Specialists
@@ -138,9 +135,7 @@ OFFICER_LOOKUP = {
     32501: "Extended Range Phantom Ray",
 }
 
-
 SKILL_LOOKUP = {
-    100001: "Redeployment",
     100002: "Incendiary Bomb",
     200001: "Electromagnetic Impact",
     200002: "Electromagnetic Blast",
@@ -157,6 +152,7 @@ SKILL_LOOKUP = {
     600002: "Smoke Bomb",
     800001: "Shield Airdrop",
     900001: "Field Recovery",
+    1000001: "Redeployment",
     1100001: "Intensive Training",
     1200001: "Underground Threat",
     1200002: "Rhino Assault",
@@ -166,7 +162,6 @@ SKILL_LOOKUP = {
     1500001: "Mobile Beacon Tower",
     1500002: "Mobile Beacon Spell",
 }
-
 
 ITEM_LOOKUP = {
     1305003: "Photon Coating",
@@ -188,7 +183,6 @@ ITEM_LOOKUP = {
     13040001: "Deployment Module",
 }
 
-
 # Pool of all reinforcement card selections a player can make not including unit reinforcements.
 CARD_LOOKUP = {
     0: "Skip",
@@ -197,13 +191,11 @@ CARD_LOOKUP = {
     **OFFICER_LOOKUP,
 }
 
-
 CONTRAPTION_LOOKUP = {
     30001: "Missile Interceptor",
     20001: "Sentry Missile",
     10001: "Shield Generator",
 }
-
 
 UNIT_LOOKUP = {
     1: "fortress",
@@ -235,9 +227,7 @@ UNIT_LOOKUP = {
     27: "raiden",
 }
 
-
 UNIT_DATA = _load_data_file("unit_data.json")
-
 
 TECH_LOOKUP = {
     # Crawler techs
@@ -473,6 +463,59 @@ TECH_LOOKUP = {
 
 
 @dataclass
+class Point:
+    x: int
+    y: int
+
+    @classmethod
+    def from_xml(cls, element: xml.etree.ElementTree.Element) -> 'Point':
+        return cls(
+            x=int(element.find("x").text),
+            y=int(element.find("y").text),
+        )
+
+    @classmethod
+    def default(cls) -> 'Point':
+        return cls(0, 0)
+
+
+@dataclass
+class Unit:
+    unit_name: str
+    ident: int
+    sell_supply: int
+    position: Optional[Point] = field(default_factory=lambda: Point.default())
+
+    def __repr__(self) -> str:
+        return f"{self.unit_name}"
+
+    @classmethod
+    def from_xml(cls, unit_element: xml.etree.ElementTree.Element) -> 'Unit':
+        return cls(
+            unit_name=UNIT_LOOKUP.get(int(unit_element.find("id").text)),
+            ident=int(unit_element.find("id").text),
+            sell_supply=int(unit_element.find("SellSupply").text),
+            position=Point.from_xml(unit_element.find("Position")),
+        )
+
+    @classmethod
+    def from_name(cls, name: str) -> 'Unit':
+        data = UNIT_DATA.get(name)
+        return cls(
+            unit_name=name,
+            ident=data.get('ident'),
+            sell_supply=data.get('value'),
+            position=Point.default(),
+        )
+
+    def set_level(self, level: int) -> 'Unit':
+        upgrade_cost = self.sell_supply // 2
+        base_value = UNIT_DATA.get(self.unit_name).get("value")
+        self.sell_supply = base_value + (level - 1) * upgrade_cost
+        return self
+
+
+@dataclass
 class BuyAction:
     unit: str
 
@@ -539,9 +582,11 @@ class UpgradeAction:
         # typically its out of bounds by 1 past the last unit. Buying and selling may shift
         # the unit data and I am not accounting for that. Upgrades done at the beginning of a turn
         # seem to always be correct.
-        unit_id = int(action_element.find("UIDX").text)
+        unit_index = int(action_element.find("UIDX").text)
+        if unit_index >= len(units):
+            return None
         return cls(
-            unit=units.get(unit_id, unit_id),
+            unit=units[unit_index],
         )
 
 
@@ -586,6 +631,7 @@ class UnitDrop:
 
     def __repr__(self) -> str:
         return f"Unit Drop: {self.count} level {self.level} {self.unit}"
+
     @classmethod
     def from_round_number_and_identifier(cls, round_number: int, identifier: int) -> 'UnitDrop':
         unit_drop_data = str(identifier)
@@ -621,6 +667,7 @@ class ReinforcementSelection:
 @dataclass
 class SkillAction:
     skill_name: str
+    target_unit_index: Optional[int] = None
 
     def __str__(self) -> str:
         return f"Use Skill: {self.skill_name}"
@@ -629,7 +676,11 @@ class SkillAction:
     def from_xml(cls, action_element: xml.etree.ElementTree.Element):
         ident = int(action_element.find("ID").text)
         skill_name = SKILL_LOOKUP.get(ident, ident)
-        return cls(skill_name=skill_name)
+        unit_index = action_element.find("UnitIndex")
+        return cls(
+            skill_name=skill_name,
+            target_unit_index=int(unit_index.text) if unit_index is not None else None,
+        )
 
 
 PlayerAction = Union[
@@ -647,10 +698,10 @@ PlayerAction = Union[
 
 
 def create_action_from_xml_element(
-    action_element: xml.etree.ElementTree.Element,
-    units: Dict[int, str],
-    round_number: int,
-    reinforce_rounds: List[int],
+        action_element: xml.etree.ElementTree.Element,
+        units: Dict[int, str],
+        round_number: int,
+        reinforce_rounds: List[int],
 ) -> Optional[PlayerAction]:
     action_type = action_element.get("{http://www.w3.org/2001/XMLSchema-instance}type")
     if action_type == "PAD_BuyUnit":
@@ -681,6 +732,7 @@ def create_action_from_xml_element(
 class PlayerRoundRecord:
     round: int
     player_hp: int
+    starting_units: List[Unit] = field(default_factory=list)
     actions: List[PlayerAction] = field(default_factory=list)
 
 
@@ -696,13 +748,14 @@ class DeploymentTracker:
     def from_record_list(cls, records: List[PlayerRoundRecord]) -> 'DeploymentTracker':
         tracker = cls(count=[5], value=[700])
         for round_number, record in enumerate(records):
+            units = record.starting_units.copy()
             for action in record.actions:
                 if isinstance(action, BuyAction):
-                    tracker.buy(round_number, action)
-                elif isinstance(action, SkillAction) and action == SkillAction("Field Recovery"):
-                    tracker.sell(round_number, action)
+                    tracker.buy(round_number, action, units)
+                elif isinstance(action, SkillAction) and action.skill_name == "Field Recovery":
+                    tracker.sell(round_number, action, units)
                 elif isinstance(action, UnitDrop):
-                    tracker.process_unit_drop(round_number, action)
+                    tracker.process_unit_drop(round_number, action, units)
         return tracker
 
     def _ensure_round_number(self, round_number: int):
@@ -710,23 +763,31 @@ class DeploymentTracker:
             self.count.append(self.count[round_number - 1])
             self.value.append(self.value[round_number - 1])
 
-    def buy(self, round_number: int, buy: BuyAction):
+    def buy(self, round_number: int, buy: BuyAction, units: List[Unit]):
         self._ensure_round_number(round_number)
 
         self.count[round_number] += 1
         self.value[round_number] += UNIT_DATA.get(buy.unit).get("value")
 
-    def sell(self, round_number: int, sell: SkillAction):
+        units.append(Unit.from_name(buy.unit))
+
+    def sell(self, round_number: int, sell: SkillAction, units: List[Unit]):
         self._ensure_round_number(round_number)
 
-        self.count[round_number] += 1
-        # TODO figure out how to get the unit being sold's value here (upgrades etc)
+        sold_unit = units[sell.target_unit_index]
+        self.count[round_number] -= 1
+        self.value[round_number] -= sold_unit.sell_supply
 
-    def process_unit_drop(self, round_number: int, drop: UnitDrop):
+        del units[sell.target_unit_index]
+
+    def process_unit_drop(self, round_number: int, drop: UnitDrop, units: List[Unit]):
         self._ensure_round_number(round_number)
 
         self.count[round_number] += drop.count
-        self.value[round_number] += drop.count * UNIT_DATA.get(drop.unit).get("value")
+        for i in range(drop.count):
+            new_unit = Unit.from_name(drop.unit).set_level(drop.level)
+            units.append(new_unit)
+            self.value[round_number] += new_unit.sell_supply
 
 
 @dataclass
@@ -799,6 +860,7 @@ def parse_battle_record(file_path) -> BattleRecord:
             for round_element in round_records_element.findall("PlayerRoundRecord"):
                 round_number = int(round_element.find("round").text)
                 player_hp = int(round_element.find("playerData/reactorCore").text)
+                units = _parse_round_units(round_element)
 
                 # The information about your starting pack is entirely determined by the seed
                 # and the index of which option you picked and is simulated in-game. So
@@ -806,13 +868,14 @@ def parse_battle_record(file_path) -> BattleRecord:
                 # changes. Instead, just look at what units were pre-placed on round 1 and which
                 # officer the player has as those will be what were in the starting pack.
                 if round_number == 1:
-                    starting_units = _parse_round_units(round_element)
+                    starting_units = units.copy()
                     starting_officer = _parse_round_officers(round_element)[0]
 
                 action_records = _parse_actions(round_element, round_number, reinforce_rounds)
                 round_records.append(PlayerRoundRecord(
                     round=round_number,
                     player_hp=player_hp,
+                    starting_units=units,
                     actions=action_records,
                 ))
 
@@ -840,12 +903,12 @@ def _parse_actions(round_element: xml.etree.ElementTree.Element, round_number: i
     return action_records
 
 
-def _parse_round_units(round_element: xml.etree.ElementTree.Element) -> Dict[int, str]:
+def _parse_round_units(round_element: xml.etree.ElementTree.Element) -> List[Unit]:
     units_element = round_element.find("playerData/units")
-    return {
-        int(unit_element.find("Index").text): UNIT_LOOKUP.get(int(unit_element.find("id").text))
+    return [
+        Unit.from_xml(unit_element)
         for unit_element in units_element.findall("NewUnitData")
-    }
+    ]
 
 
 def _parse_round_officers(round_element: xml.etree.ElementTree.Element) -> List[str]:
@@ -867,7 +930,9 @@ def _setup_pretty_table_with_players(players: List[PlayerRecord]):
 
 
 def _player_start_to_string(player: PlayerRecord) -> str:
-    return "\n".join([player.starting_officer] + list(player.starting_units.values()))
+    return "\n".join([player.starting_officer] + [
+        unit.unit_name
+        for unit in player.starting_units])
 
 
 def _battle_record_to_string(battle_record: BattleRecord) -> str:
@@ -903,7 +968,7 @@ def _battle_record_to_string(battle_record: BattleRecord) -> str:
 
             players_actions.append("\n".join(player_actions))
 
-        table.add_row([f"{i+1}"] + [actions for actions in players_actions])
+        table.add_row([f"{i + 1}"] + [actions for actions in players_actions])
 
     return table
 
