@@ -707,27 +707,26 @@ class DeploymentTracker:
 
     def _ensure_round_number(self, round_number: int):
         if round_number >= len(self.count):
-            self.count.append(0)
-        if round_number >= len(self.value):
+            self.count.append(self.count[round_number - 1])
             self.value.append(self.value[round_number - 1])
 
-    def buy(self, round: int, buy: BuyAction):
-        self._ensure_round_number(round)
+    def buy(self, round_number: int, buy: BuyAction):
+        self._ensure_round_number(round_number)
 
-        self.count[round] += 1
-        self.value[round] += UNIT_DATA.get(buy.unit).get("value")
+        self.count[round_number] += 1
+        self.value[round_number] += UNIT_DATA.get(buy.unit).get("value")
 
-    def sell(self, round: int, sell: SkillAction):
-        self._ensure_round_number(round)
+    def sell(self, round_number: int, sell: SkillAction):
+        self._ensure_round_number(round_number)
 
-        self.count[round] += 1
+        self.count[round_number] += 1
         # TODO figure out how to get the unit being sold's value here (upgrades etc)
 
-    def process_unit_drop(self, round: int, drop: UnitDrop):
-        self._ensure_round_number(round)
+    def process_unit_drop(self, round_number: int, drop: UnitDrop):
+        self._ensure_round_number(round_number)
 
-        self.count[round] += drop.count
-        self.value[round] += drop.count * UNIT_DATA.get(drop.unit).get("value")
+        self.count[round_number] += drop.count
+        self.value[round_number] += drop.count * UNIT_DATA.get(drop.unit).get("value")
 
 
 @dataclass
