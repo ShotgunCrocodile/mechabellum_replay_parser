@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 import re
 import json
 import argparse
+import copy
 from dataclasses import dataclass, field
 from typing import List, Optional, Union, Dict, Any
 from prettytable import PrettyTable, ALL
@@ -501,6 +502,7 @@ class Unit:
     @classmethod
     def from_name(cls, name: str) -> 'Unit':
         data = UNIT_DATA.get(name)
+
         return cls(
             unit_name=name,
             ident=data.get('ident'),
@@ -513,6 +515,62 @@ class Unit:
         base_value = UNIT_DATA.get(self.unit_name).get("value")
         self.sell_supply = base_value + (level - 1) * upgrade_cost
         return self
+
+
+SPECIAL_CASE_UNIT_SPAWNING = {
+    '1503': {
+        (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
+        (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
+        (2, "Fire Badger Specialist"): Unit.from_name("fire badger"),
+        (4, "Rhino Specialist"): Unit.from_name("rhino").set_level(2),
+        (4, "Typhoon Specialist"): Unit.from_name("typhoon"),
+        (4, "Farseer Specialist"): Unit.from_name("farseer"),
+    },
+    'default': {
+        (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
+        (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
+        (2, "Fire Badger Specialist"): Unit.from_name("fire badger"),
+        (3, "Typhoon Specialist"): Unit.from_name("typhoon"),
+        (3, "Farseer Specialist"): Unit.from_name("farseer"),
+        (4, "Rhino Specialist"): Unit.from_name("rhino").set_level(2),
+    }
+}
+
+
+@dataclass
+class UnitCollection:
+    units: Dict[int, Unit] = field(default_factory=dict)
+    next_index: int = 0
+
+    @classmethod
+    def from_xml(cls, round_element: xml.etree.ElementTree.Element) -> 'UnitCollection':
+        units_element = round_element.find("playerData/units")
+        units = cls()
+        for unit_element in units_element.findall("NewUnitData"):
+            unit = Unit.from_xml(unit_element)
+            units.add_unit(unit, int(unit_element.find("Index").text))
+        units.next_index = int(round_element.find("playerData/unitIndex").text)
+        return units
+
+    def add_unit(self, unit: Unit, index: Optional[int] = None) -> int:
+        if index is None:
+            index = self.next_index
+        self.units[index] = unit
+        self.next_index += 1
+        return index
+
+    def delete_unit(self, index: int) -> None:
+        if index in self.units:
+            del self.units[index]
+
+    def get_unit(self, index: int) -> Optional[Unit]:
+        return self.units.get(index)
+
+    def __contains__(self, index: int) -> bool:
+        return index in self.units
+
+    def copy(self) -> 'UnitCollection':
+        return copy.deepcopy(self)
 
 
 @dataclass
@@ -577,16 +635,16 @@ class UpgradeAction:
         return f"Upgrade {self.unit}"
 
     @classmethod
-    def from_xml(cls, action_element: xml.etree.ElementTree.Element, units: dict[int, str]):
+    def from_xml(cls, action_element: xml.etree.ElementTree.Element, units: UnitCollection):
         # TODO: Bug here: sometimes the upgraded unit is not in the list for some reason.
         # typically its out of bounds by 1 past the last unit. Buying and selling may shift
         # the unit data and I am not accounting for that. Upgrades done at the beginning of a turn
         # seem to always be correct.
         unit_index = int(action_element.find("UIDX").text)
-        if unit_index >= len(units):
+        if unit_index not in units:
             return None
         return cls(
-            unit=units[unit_index],
+            unit=units.get_unit(unit_index),
         )
 
 
@@ -674,12 +732,30 @@ class SkillAction:
 
     @classmethod
     def from_xml(cls, action_element: xml.etree.ElementTree.Element):
+        # TODO: Sometimes the ident is just 0 for some reason for a player
+        # will have to make a bank of skills and keep track of them manually
+        # to use the index instead of the identifier to fix this.
         ident = int(action_element.find("ID").text)
         skill_name = SKILL_LOOKUP.get(ident, ident)
         unit_index = action_element.find("UnitIndex")
         return cls(
             skill_name=skill_name,
             target_unit_index=int(unit_index.text) if unit_index is not None else None,
+        )
+
+@dataclass
+class MoveUnitAction:
+    unit_index: int
+    rotate: bool
+    position: Point
+
+    @classmethod
+    def from_xml(cls, action_element: xml.etree.ElementTree.Element) -> 'MoveUnitAction':
+        move_element = action_element.find("moveUnitDatas/MoveUnitData")
+        return cls(
+            unit_index=int(move_element.find("unitIndex").text),
+            rotate=move_element.find("isRotate").text == "true",
+            position=Point.from_xml(move_element.find("position")),
         )
 
 
@@ -694,6 +770,7 @@ PlayerAction = Union[
     UnitDrop,
     ReinforcementSelection,
     SkillAction,
+    MoveUnitAction,
 ]
 
 
@@ -724,6 +801,8 @@ def create_action_from_xml_element(
         return ReinforcementSelection.from_xml(action_element)
     elif action_type == "PAD_ReleaseCommanderSkill":
         return SkillAction.from_xml(action_element)
+    elif action_type == "PAD_MoveUnit":
+        return MoveUnitAction.from_xml(action_element)
 
     return None
 
@@ -741,57 +820,78 @@ class DeploymentTracker:
     count: List[int] = field(default_factory=list)
     # Value here encompasses the unit purchase cost only. Upgrades and tech not included yet.
     # TODO add tech tracker
-    # TODO add upgrade cost tracking
     value: List[int] = field(default_factory=list)
+    units: List[UnitCollection] = field(default_factory=list)
 
     @classmethod
-    def from_record_list(cls, records: List[PlayerRoundRecord]) -> 'DeploymentTracker':
+    def from_record_list(cls, version: str, officer: str, records: List[PlayerRoundRecord]) -> 'DeploymentTracker':
         tracker = cls(count=[5], value=[700])
-        for round_number, record in enumerate(records):
+        # This is a little confusing since record_number and record.round seem to be used
+        # interchangeably. record.round is the actual in game round, even in the event that
+        # the replay was missing some starting rounds. record_number is just the number of
+        # the record in our list. For example if you started observing a game on round 3
+        # your replay would data for round 0, 3, 4, 5 etc... record_number would still be
+        # 0, 1, 2, 3. That means for things that trigger on a round number like spawning a
+        # farseer for farseer spec we need to use the record.round number. But for internal
+        # bookkeeping we use record_number.
+        for record_number, record in enumerate(records):
             units = record.starting_units.copy()
+            tracker.ensure_round_number(record_number)
+            cls._pre_action_unit_setup(version, record.round, officer, units)
             for action in record.actions:
                 if isinstance(action, BuyAction):
-                    tracker.buy(round_number, action, units)
+                    tracker.buy(record_number, action, units)
                 elif isinstance(action, SkillAction) and action.skill_name == "Field Recovery":
-                    tracker.sell(round_number, action, units)
+                    tracker.sell(record_number, action, units)
                 elif isinstance(action, UnitDrop):
-                    tracker.process_unit_drop(round_number, action, units)
+                    tracker.process_unit_drop(record_number, action, units)
+                elif isinstance(action, MoveUnitAction):
+                    tracker.move(action, units)
+            tracker.units.append(units)
         return tracker
 
-    def _ensure_round_number(self, round_number: int):
+    @classmethod
+    def _pre_action_unit_setup(cls, version: str, round_number: int, officer: str, units: UnitCollection):
+        # There are some special cases to take care of before we process user actions
+        cases = SPECIAL_CASE_UNIT_SPAWNING.get(version, SPECIAL_CASE_UNIT_SPAWNING['default'])
+        key = (round_number, officer)
+        unit = cases.get(key)
+
+        if unit is not None:
+            units.add_unit(unit)
+
+    def ensure_round_number(self, round_number: int):
         if round_number >= len(self.count):
             self.count.append(self.count[round_number - 1])
             self.value.append(self.value[round_number - 1])
 
-    def buy(self, round_number: int, buy: BuyAction, units: List[Unit]):
-        self._ensure_round_number(round_number)
+    def move(self, move: MoveUnitAction, units: UnitCollection):
+        unit = units.get_unit(move.unit_index)
+        unit.position = move.position
 
+    def buy(self, round_number: int, buy: BuyAction, units: UnitCollection):
         self.count[round_number] += 1
         self.value[round_number] += UNIT_DATA.get(buy.unit).get("value")
+        units.add_unit(Unit.from_name(buy.unit))
 
-        units.append(Unit.from_name(buy.unit))
-
-    def sell(self, round_number: int, sell: SkillAction, units: List[Unit]):
-        self._ensure_round_number(round_number)
-
-        sold_unit = units[sell.target_unit_index]
+    def sell(self, round_number: int, sell: SkillAction, units: UnitCollection):
+        sold_unit = units.get_unit(sell.target_unit_index)
         self.count[round_number] -= 1
         self.value[round_number] -= sold_unit.sell_supply
+        units.delete_unit(sell.target_unit_index)
 
-        del units[sell.target_unit_index]
-
-    def process_unit_drop(self, round_number: int, drop: UnitDrop, units: List[Unit]):
-        self._ensure_round_number(round_number)
-
+    def process_unit_drop(self, round_number: int, drop: UnitDrop, units: UnitCollection):
         self.count[round_number] += drop.count
         for i in range(drop.count):
             new_unit = Unit.from_name(drop.unit).set_level(drop.level)
-            units.append(new_unit)
+
+            units.add_unit(new_unit)
             self.value[round_number] += new_unit.sell_supply
 
 
 @dataclass
 class PlayerRecord:
+    version: str
     id: str
     name: str
     round_records: List[PlayerRoundRecord] = field(default_factory=list)
@@ -801,11 +901,16 @@ class PlayerRecord:
 
     def __post_init__(self):
         if self.deployments is None:
-            self.deployments = DeploymentTracker.from_record_list(self.round_records)
+            self.deployments = DeploymentTracker.from_record_list(
+                self.version,
+                self.starting_officer,
+                self.round_records,
+            )
 
 
 @dataclass
 class BattleRecord:
+    version: str
     player_records: List[PlayerRecord]
 
 
@@ -836,10 +941,20 @@ def parse_battle_record(file_path) -> BattleRecord:
     root = ET.fromstring(xml_content)
 
     # Find the unit drop rounds
-    reinforce_rounds = [
-        int(node.text) for node in
-        root.find("matchDatas/MatchSnapshotData/unitReinforceRounds").findall("int")
-    ]
+    reinforce_rounds = []
+
+    # Iterate through all MatchSnapshotData elements
+    for snapshot in root.findall("matchDatas/MatchSnapshotData"):
+        # Extract reinforcement rounds from the current snapshot
+        rounds = [int(node.text) for node in snapshot.findall("unitReinforceRounds/int")]
+
+        # If we found values, store them and stop searching
+        # Sometimes these are empty for some reason in round 0, so we can't just assume
+        # it will always be in a particular round. I assume it will always be in at
+        # the very least the first round the drops arrive.
+        if rounds:
+            reinforce_rounds = rounds
+            break
 
     # Navigate to player records
     player_records_element = root.find("playerRecords")
@@ -857,19 +972,28 @@ def parse_battle_record(file_path) -> BattleRecord:
         starting_units = []
         starting_officer = None
         if round_records_element is not None:
+            extracted_starting_units_and_officer = False
             for round_element in round_records_element.findall("PlayerRoundRecord"):
                 round_number = int(round_element.find("round").text)
                 player_hp = int(round_element.find("playerData/reactorCore").text)
-                units = _parse_round_units(round_element)
+                units = UnitCollection.from_xml(round_element)
 
                 # The information about your starting pack is entirely determined by the seed
                 # and the index of which option you picked and is simulated in-game. So
                 # there is no way to reverse engineer that in a way that will be durable to game
                 # changes. Instead, just look at what units were pre-placed on round 1 and which
                 # officer the player has as those will be what were in the starting pack.
-                if round_number == 1:
+                # Addendum:
+                # When you join a game to observe late you only have the rounds you observed. That
+                # means in a common case round 1 can be missing, we cannot extract the officer and
+                # starting units from it reliably. Instead, we look at the lowest non-zero round
+                # and get the 0th officer, and the units labeled with indexes 1-5 as those do not
+                # change. In the event that they were sold they will simply be missing from the
+                # report as I do not want to guess.
+                if round_number > 0 and extracted_starting_units_and_officer is False:
                     starting_units = units.copy()
                     starting_officer = _parse_round_officers(round_element)[0]
+                    extracted_starting_units_and_officer = True
 
                 action_records = _parse_actions(round_element, round_number, reinforce_rounds)
                 round_records.append(PlayerRoundRecord(
@@ -880,6 +1004,7 @@ def parse_battle_record(file_path) -> BattleRecord:
                 ))
 
         player_records.append(PlayerRecord(
+            version=root.find("Version").text,
             id=player_id,
             name=player_name,
             round_records=round_records,
@@ -887,12 +1012,15 @@ def parse_battle_record(file_path) -> BattleRecord:
             starting_officer=starting_officer,
         ))
 
-    return BattleRecord(player_records=player_records)
+    return BattleRecord(
+        version=root.find("Version").text,
+        player_records=player_records,
+    )
 
 
 def _parse_actions(round_element: xml.etree.ElementTree.Element, round_number: int, reinforce_rounds: List[int]):
     action_records = []
-    units = _parse_round_units(round_element)
+    units = UnitCollection.from_xml(round_element)
 
     for action_element in round_element.findall("actionRecords/MatchActionData"):
 
@@ -901,14 +1029,6 @@ def _parse_actions(round_element: xml.etree.ElementTree.Element, round_number: i
             action_records.append(action)
 
     return action_records
-
-
-def _parse_round_units(round_element: xml.etree.ElementTree.Element) -> List[Unit]:
-    units_element = round_element.find("playerData/units")
-    return [
-        Unit.from_xml(unit_element)
-        for unit_element in units_element.findall("NewUnitData")
-    ]
 
 
 def _parse_round_officers(round_element: xml.etree.ElementTree.Element) -> List[str]:
@@ -932,7 +1052,8 @@ def _setup_pretty_table_with_players(players: List[PlayerRecord]):
 def _player_start_to_string(player: PlayerRecord) -> str:
     return "\n".join([player.starting_officer] + [
         unit.unit_name
-        for unit in player.starting_units])
+        for unit in player.starting_units.units.values()
+    ])
 
 
 def _battle_record_to_string(battle_record: BattleRecord) -> str:
@@ -955,6 +1076,10 @@ def _battle_record_to_string(battle_record: BattleRecord) -> str:
 
                 # Collect all the remaining player actions
                 for action in player.round_records[round_idx].actions:
+                    # TODO implement custom filtering here rather than hardcode
+                    # that we are ignoring move actions.
+                    if isinstance(action, MoveUnitAction):
+                        continue
                     player_actions.append(str(action))
 
                 # Grab the deployment count and put it at the bottom of the list of actions.
