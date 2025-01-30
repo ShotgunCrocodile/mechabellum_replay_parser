@@ -92,6 +92,13 @@ And it should spit out a table that looks like this:
 +------+-----------------------------------+----------------------------------+
 ```
 
+# Stats calculator
+
+Started a calculator to aggregate information about a player or a replay. Ideally I would like to have the script extract all the data
+into a record format that could be fed into a sqlitedb. From there I could add a some scripts here that make accessing the db 
+simple. For now though the stats.py simply extracts the only thing I was interested at the time and prints it out. If I get interested
+in additional stats I may go through the effort to export to a database.
+
 # Contributing
 
 Theres a lot still missing so feel free to make a pull request too add something. 
