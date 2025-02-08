@@ -2,23 +2,33 @@
 
 A basic replay file parser for mechabellum replay files (.grbr).
 
-# Usage
+# Project Setup and Usage
 
-Currently I have only tested it on python 3.9. You will need to install prettytable in order for it to work.
+This project uses `uv` for task automation and `just` for build rules.
 
-```
-python -m pip install -r requirements.txt
-```
+#### Installation
+- Download and install `just` from https://github.com/casey/just?tab=readme-ov-file#installation
+- Download and install `uv` from https://docs.astral.sh/uv/getting-started/installation/
 
-Once you have the dependencies in your python environment you can point it at a replay file like so:
+#### Usage
 
-```
-$ python .\mechabellum_replay_parser.py 'C:\Program Files (x86)\Steam\steamapps\common\Mechabellum\ProjectDatas\Replay\1475_20250110--134322461_[ShotgunCrocodile]VS[Opponent].grbr'
-```
+- Clone this repository.
+- Navigate to the project directory in your shell of choice, or powershell.
+- Run the following command to examine a replay file:
+
+      just run /Path/To/Replay/File.grbr
+
+Replace the path with the actual path to the replay file and that should be it!
+
  
-And it should spit out a table that looks like this:
+Below is an example run:
 
 ```
+just run "C:\Users\username\Downloads\1438_20241214--268597269_[ShotgunCrocodile]VS[Opponent].grbr"
+uv sync
+Resolved 8 packages in 0.91ms
+Audited 8 packages in 0.24ms
+uv run mechabellum-replay-parser "C:\Users\username\Downloads\1438_20241214--268597269_[ShotgunCrocodile]VS[Opponent].grbr"
 +------+-----------------------------------+----------------------------------+
 | Round| ShotgunCrocodile                  | Opponent                         |
 +------+-----------------------------------+----------------------------------+
@@ -101,9 +111,9 @@ in additional stats I may go through the effort to export to a database.
 
 # Contributing
 
-Theres a lot still missing so feel free to make a pull request too add something. 
+There's a lot still missing so feel free to make a pull request to add something. 
 
-If you parse a replay and you get a number for a tech it would be handy if you could make a pull request to add that number to the appropriate lookup table:
+If you parse a replay, and you get a number for a tech it would be handy if you could make a pull request to add that number to the appropriate lookup table:
 
 Techs: https://github.com/ShotgunCrocodile/mechabellum_replay_parser/blob/main/mechabellum_replay_parser.py#L79
 

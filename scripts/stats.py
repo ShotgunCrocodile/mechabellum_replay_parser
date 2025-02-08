@@ -6,7 +6,7 @@ import unicodedata
 from dataclasses import dataclass, field
 from typing import List, Dict
 
-from mechabellum_replay_parser import parse_battle_record
+from src.mechabellum_replay_parser import parse_battle_record
 
 
 def get_display_width(text: str) -> int:

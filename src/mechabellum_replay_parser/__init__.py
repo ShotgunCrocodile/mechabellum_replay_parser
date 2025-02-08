@@ -1056,7 +1056,7 @@ def _player_start_to_string(player: PlayerRecord) -> str:
     ])
 
 
-def _battle_record_to_string(battle_record: BattleRecord) -> str:
+def battle_record_to_string(battle_record: BattleRecord) -> str:
     """Displays the battle record in a tabular format."""
     max_rounds = max(len(player.round_records) for player in battle_record.player_records)
     table = _setup_pretty_table_with_players(battle_record.player_records)
@@ -1098,12 +1098,3 @@ def _battle_record_to_string(battle_record: BattleRecord) -> str:
     return table
 
 
-if __name__ == "__main__":
-    # Set up command-line argument parsing
-    parser = argparse.ArgumentParser(description="Parse a Mechabellum replay file (.grbr).")
-    parser.add_argument("file", help="Path to the Mechabellum replay file (.grbr).")
-    args = parser.parse_args()
-
-    battle_record = parse_battle_record(args.file)
-    table = _battle_record_to_string(battle_record)
-    print(table)
