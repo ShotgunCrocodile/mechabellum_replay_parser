@@ -2,6 +2,27 @@
 
 A basic replay file parser for mechabellum replay files (.grbr).
 
+# Installation
+
+The best way to install and manage python tools these days is `uv`. Install `uv` from
+the official source: https://docs.astral.sh/uv/getting-started/installation/. Now you can 
+run the command 
+
+    uv tool install https://github.com/ShotgunCrocodile/mechabellum_replay_parser/releases/download/v0.1.0/mechabellum_replay_parser-0.1.0-py3-none-any.whl
+
+to directly install the replay parser command line tool from a github tag. That should result in the below output:
+
+    Resolved 3 packages in 508ms
+    Installed 3 packages in 12ms
+     + mechabellum-replay-parser==0.1.0 (from https://github.com/ShotgunCrocodile/mechabellum_replay_parser/releases/download/v0.1.0/mechabellum_replay_parser-0.1.0-py3-none-any.whl)
+     + prettytable==3.14.0
+     + wcwidth==0.2.13
+    Installed 1 executable: mechabellum-replay-parser.exe
+
+Now you should have access to the `mechabellum-replay-parser` command line tool, which can be run like so:
+
+    mechabellum-replay-parser.exe C:\Users\user\Downloads\replay_file.grbr 
+
 # Project Setup and Usage
 
 This project uses `uv` for task automation and `just` for build rules.
