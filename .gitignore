@@ -184,6 +184,3 @@ cython_debug/
 
 # PyCharm
 .idea/
-
-# This is a library not an application
-uv.lock
