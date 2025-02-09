@@ -8,7 +8,7 @@ The best way to install and manage python tools these days is `uv`. Install `uv`
 the official source: https://docs.astral.sh/uv/getting-started/installation/. Now you can 
 run the command 
 
-    uv tool install https://github.com/ShotgunCrocodile/mechabellum_replay_parser/releases/latest/download/dist.whl
+    uv tool install https://github.com/ShotgunCrocodile/mechabellum_replay_parser/releases/latest/download/dist.tar.gz
 
 to directly install the replay parser command line tool from a github tag. That should result in the below output:
 

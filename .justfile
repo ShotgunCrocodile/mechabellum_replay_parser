@@ -12,7 +12,7 @@ run path: sync-env
 
 build: clean sync-env
     uv build
-    for file in dist/*.whl; do cp "$file" dist/dist.whl; break; done
+    for file in dist/*.tar.gz; do cp "$file" dist/dist.tar.gz; break; done
 
 clean:
     rm -rf dist
