@@ -731,12 +731,14 @@ class SkillAction:
         return f"Use Skill: {self.skill_name}"
 
     @classmethod
-    def from_xml(cls, action_element: xml.etree.ElementTree.Element):
-        # TODO: Sometimes the ident is just 0 for some reason for a player
-        # will have to make a bank of skills and keep track of them manually
-        # to use the index instead of the identifier to fix this.
-        ident = int(action_element.find("ID").text)
-        skill_name = SKILL_LOOKUP.get(ident, ident)
+    def from_xml(cls, action_element: xml.etree.ElementTree.Element, skills: 'SkillCollection'):
+        # The game supposedly uses the <id> field to track which skill is being used. However, in practice
+        # a lot of times this field is simply set to 0 for unknown reasons. Instead of relying on this field
+        # we can use the <SkillIndex> field to determine the index in the player's skill list of the skill.
+        # This is more work since we manually need to track this using the SkillCollection class, but is required
+        # for consistency.
+        skill_index = int(action_element.find("SkillIndex").text)
+        skill_name = skills.get_skill(skill_index)
         unit_index = action_element.find("UnitIndex")
         return cls(
             skill_name=skill_name,
@@ -774,11 +776,48 @@ PlayerAction = Union[
 ]
 
 
+@dataclass
+class SkillCollection:
+    skills: Dict[int, str] = field(default_factory=dict)
+    next_index: int = 0
+
+    @classmethod
+    def from_xml(cls, round_element: xml.etree.ElementTree.Element) -> 'SkillCollection':
+        commander_skills_element = round_element.find("playerData/commanderSkills")
+        collection = cls()
+        for skill_element in commander_skills_element.findall("CommanderSkillData"):
+            index = int(skill_element.find("index").text)
+            skill_id = int(skill_element.find("id").text)
+            skill_name = SKILL_LOOKUP.get(skill_id, skill_id)
+            collection.add_skill(skill_name, index)
+        return collection
+
+    def add_skill(self, skill_name: str, index: Optional[int] = None) -> None:
+        if index is None:
+            index = self.next_index
+        self.skills[index] = skill_name
+        self.next_index += 1
+
+    def add_skill_from_action(self, action: PlayerAction) -> None:
+        # Not worth attaching metadata to the various actions yet to determine their type, just to avoid a
+        # special case here. It eventually may be worth it though if the metadata was used elsewhere.
+        if isinstance(action, ResearchCenterTowerAction):
+            if action.skill_name in ('Oil Bomb', 'Field Recovery', 'Mobile Beacon'):
+                self.add_skill(action.skill_name)
+        elif isinstance(action, ReinforcementSelection):
+            if action.card_name in SKILL_LOOKUP.values():
+                self.add_skill(action.card_name)
+
+    def get_skill(self, skill_index: int) -> str:
+        return self.skills.get(skill_index, f"unknown skill (invalid index {skill_index}")
+
+
 def create_action_from_xml_element(
         action_element: xml.etree.ElementTree.Element,
         units: Dict[int, str],
         round_number: int,
-        reinforce_rounds: List[int],
+        reinforce_rounds: List[int],  # If the number of extra arguments grows past reinforce_rounds
+        skills: SkillCollection,      # and skills, then they should be wrapped in a CreateActionContext class.
 ) -> Optional[PlayerAction]:
     action_type = action_element.get("{http://www.w3.org/2001/XMLSchema-instance}type")
     if action_type == "PAD_BuyUnit":
@@ -800,7 +839,7 @@ def create_action_from_xml_element(
     elif action_type == "PAD_ChooseReinforceItem":
         return ReinforcementSelection.from_xml(action_element)
     elif action_type == "PAD_ReleaseCommanderSkill":
-        return SkillAction.from_xml(action_element)
+        return SkillAction.from_xml(action_element, skills)
     elif action_type == "PAD_MoveUnit":
         return MoveUnitAction.from_xml(action_element)
 
@@ -1018,13 +1057,19 @@ def parse_battle_record(file_path) -> BattleRecord:
     )
 
 
-def _parse_actions(round_element: xml.etree.ElementTree.Element, round_number: int, reinforce_rounds: List[int]):
+def _parse_actions(
+        round_element: xml.etree.ElementTree.Element,
+        round_number: int,
+        reinforce_rounds: List[int],
+):
     action_records = []
     units = UnitCollection.from_xml(round_element)
+    skills = SkillCollection.from_xml(round_element)
 
     for action_element in round_element.findall("actionRecords/MatchActionData"):
 
-        action = create_action_from_xml_element(action_element, units, round_number, reinforce_rounds)
+        action = create_action_from_xml_element(action_element, units, round_number, reinforce_rounds, skills)
+        skills.add_skill_from_action(action)
         if action is not None:
             action_records.append(action)
 
