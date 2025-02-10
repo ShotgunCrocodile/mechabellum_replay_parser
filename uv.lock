@@ -21,7 +21,7 @@ wheels = [
 
 [[package]]
 name = "mechabellum-replay-parser"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "prettytable" },
