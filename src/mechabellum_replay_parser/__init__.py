@@ -629,7 +629,7 @@ class TechAction:
 
 @dataclass
 class UpgradeAction:
-    unit: str
+    unit: Unit
 
     def __repr__(self) -> str:
         return f"Upgrade {self.unit}"
@@ -693,7 +693,7 @@ class UnitDrop:
     @classmethod
     def from_round_number_and_identifier(cls, round_number: int, identifier: int) -> 'UnitDrop':
         unit_drop_data = str(identifier)
-        unit_drop_regex = re.compile('1{:02d}(?P<count>\d)(?P<level>\d)(?P<unit>\d+)'.format(round_number))
+        unit_drop_regex = re.compile(r'1{:02d}(?P<count>\d)(?P<level>\d)(?P<unit>\d+)'.format(round_number))
         match = unit_drop_regex.match(unit_drop_data)
         data = {
             k: int(v)
@@ -842,7 +842,6 @@ def create_action_from_xml_element(
         return SkillAction.from_xml(action_element, skills)
     elif action_type == "PAD_MoveUnit":
         return MoveUnitAction.from_xml(action_element)
-
     return None
 
 
@@ -880,6 +879,8 @@ class DeploymentTracker:
             for action in record.actions:
                 if isinstance(action, BuyAction):
                     tracker.buy(record_number, action, units)
+                elif isinstance(action, UpgradeAction):
+                    tracker.upgrade(record_number, action)
                 elif isinstance(action, SkillAction) and action.skill_name == "Field Recovery":
                     tracker.sell(record_number, action, units)
                 elif isinstance(action, UnitDrop):
@@ -912,6 +913,12 @@ class DeploymentTracker:
         self.count[round_number] += 1
         self.value[round_number] += UNIT_DATA.get(buy.unit).get("value")
         units.add_unit(Unit.from_name(buy.unit))
+
+    def upgrade(self, round_number: int, upgrade: UpgradeAction):
+        self.value[round_number] += UNIT_DATA.get(upgrade.unit.unit_name).get("value") // 2
+        # TODO: Potentially better here to update the UnitCollection and then
+        # at the end of a turn we can total the units' SellSupply values. This will
+        # keep everything consistent and have a single source of truth.
 
     def sell(self, round_number: int, sell: SkillAction, units: UnitCollection):
         sold_unit = units.get_unit(sell.target_unit_index)
