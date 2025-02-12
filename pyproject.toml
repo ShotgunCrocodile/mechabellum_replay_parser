@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mechabellum-replay-parser"
-version = "0.1.2"
+version = "1.0.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -21,7 +21,19 @@ allow-direct-references = true
 [tool.hatch.build.targets.sdist]
 include = ["src/**", "tests/**"]
 
+
+[bumpver]
+current_version = "1.0.0"
+version_pattern = "MAJOR.MINOR.PATCH"
+
+[bumpver.file_patterns]
+"pyproject.toml" = [
+    'version = "{version}"',
+]
+
+
 [dependency-groups]
 dev = [
+    "bumpver>=2024.1130",
     "pytest>=8.3.4",
 ]
