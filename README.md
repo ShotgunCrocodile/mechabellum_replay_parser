@@ -21,7 +21,14 @@ to directly install the replay parser command line tool from a github tag. That 
 
 Now you should have access to the `mechabellum-replay-parser` command line tool, which can be run like so:
 
-    mechabellum-replay-parser.exe C:\Users\user\Downloads\replay_file.grbr 
+    mechabellum-replay-parser.exe battle C:\Users\user\Downloads\replay_file.grbr 
+
+# Updating
+
+To update the tool use the same command that was used to install it but add the `--force` argument to the end.
+
+    uv tool install https://github.com/ShotgunCrocodile/mechabellum_replay_parser/releases/latest/download/dist.tar.gz --force
+
 
 # Project Setup and Usage
 
@@ -33,23 +40,18 @@ This project uses `uv` for task automation and `just` for build rules.
 
 #### Usage
 
-- Clone this repository.
-- Navigate to the project directory in your shell of choice, or powershell.
-- Run the following command to examine a replay file:
+Once `uv` and `mecahbellum-replay-parser.exe` have been installed run the following command to examine a replay file:
 
-      just run /Path/To/Replay/File.grbr
+      mechabellum-replay-parser.exe 
 
-Replace the path with the actual path to the replay file and that should be it!
+There are currently two subcommands `battle` and `tech`. Battle shows you the full game in a table
+with each round annotated with a list of actions. Tech shows you each player's full tech loadout.
 
- 
-Below is an example run:
+
+Below is an example run using the `battle` command to print out each turn of the battle.
 
 ```
-just run "C:\Users\username\Downloads\1438_20241214--268597269_[ShotgunCrocodile]VS[Opponent].grbr"
-uv sync
-Resolved 8 packages in 0.91ms
-Audited 8 packages in 0.24ms
-uv run mechabellum-replay-parser "C:\Users\username\Downloads\1438_20241214--268597269_[ShotgunCrocodile]VS[Opponent].grbr"
+> mechabellum-replay-parser.exe battle "C:\Users\username\Downloads\1438_20241214--268597269_[ShotgunCrocodile]VS[Opponent].grbr"
 +------+-----------------------------------+----------------------------------+
 | Round| ShotgunCrocodile                  | Opponent                         |
 +------+-----------------------------------+----------------------------------+
@@ -122,6 +124,8 @@ uv run mechabellum-replay-parser "C:\Users\username\Downloads\1438_20241214--268
 |      | Device Shield Generator           |                                  |
 +------+-----------------------------------+----------------------------------+
 ```
+
+
 
 # Stats calculator
 
