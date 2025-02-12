@@ -414,6 +414,7 @@ TECH_LOOKUP = {
     10321: "Field maintenance",
     3321: "Missile interceptor",
     721: "Doubleshot",
+    110211: "Secondary Armament",
 
     # Typhoon techs
     3022: "Mechanical rage",
@@ -460,6 +461,9 @@ TECH_LOOKUP = {
     # Raiden techs
     10227: "Range enhancement",
     4027: "Chain",
+    110271: "Fork",
+    1827: "Electromagnetic Shot",
+    4127: "Ionization",
 }
 
 
@@ -944,6 +948,7 @@ class PlayerRecord:
     starting_officer: Optional[str] = None
     starting_units: List[int] = field(default_factory=list)
     deployments: Optional[DeploymentTracker] = None
+    tech_choices: Optional[Dict[str, List[str]]] = None
 
     def __post_init__(self):
         if self.deployments is None:
@@ -960,7 +965,7 @@ class BattleRecord:
     player_records: List[PlayerRecord]
 
 
-def extract_xml(file_path) -> str:
+def extract_xml(file_path: Path) -> str:
     """Extracts the XML portion from a file containing a binary blob with XML content."""
     with open(file_path, 'rb') as file:
         content = file.read()
@@ -978,7 +983,7 @@ def extract_xml(file_path) -> str:
     return content[start:end].decode('utf-8')
 
 
-def parse_battle_record(file_path) -> BattleRecord:
+def parse_battle_record(file_path: Path) -> BattleRecord:
     """Parses the BattleRecord XML file to extract player records and their details."""
     # Extract XML content from the binary file
     xml_content = extract_xml(file_path)
@@ -1011,6 +1016,17 @@ def parse_battle_record(file_path) -> BattleRecord:
     for player_element in player_records_element.findall("PlayerRecord"):
         player_id = player_element.find("id").text
         player_name = player_element.find("name").text
+
+        # Parse their tech choices
+        unit_datas_element = player_element.find("data/unitDatas")
+        unit_data = {
+            UNIT_LOOKUP.get(int(data_element.find("id").text), data_element.find("id").text): [
+                TECH_LOOKUP.get(int(tech_element.get("data")), tech_element.get("data"))
+                for tech_element in data_element.find("techs").findall("tech")
+            ]
+            for data_element in unit_datas_element.findall("unitData")
+            if data_element.find("id").text != "2001"  # For now a special case for death knell to just keep it out.
+        }
 
         # Parse round records
         round_records_element = player_element.find("playerRoundRecords")
@@ -1056,6 +1072,7 @@ def parse_battle_record(file_path) -> BattleRecord:
             round_records=round_records,
             starting_units=starting_units,
             starting_officer=starting_officer,
+            tech_choices=unit_data,
         ))
 
     return BattleRecord(
