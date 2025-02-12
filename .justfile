@@ -6,8 +6,8 @@ test: sync-env
    uv run pytest tests/
 
 
-run path: sync-env
-    uv run mechabellum-replay-parser "{{path}}"
+run +args: sync-env
+    uv run mechabellum-replay-parser {{args}}
 
 
 build: clean sync-env
@@ -21,3 +21,9 @@ clean:
 sync-env:
     uv sync
 
+
+bump-version type:
+    uv run bumpver update {{type}}
+    uv sync
+    git add uv.lock pyproject.toml
+    git commit -m "Bump version to `uvx --from=toml-cli toml get --toml-path=pyproject.toml project.version`"
