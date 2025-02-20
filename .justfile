@@ -6,6 +6,17 @@ test: sync-env
    uv run pytest tests/
 
 
+check:
+    uv run ruff check
+
+
+format:
+    uv run ruff format
+
+
+prcheck: check format test
+
+
 run +args: sync-env
     uv run mechabellum-replay-parser {{args}}
 
@@ -13,6 +24,7 @@ run +args: sync-env
 build: clean sync-env
     uv build
     for file in dist/*.tar.gz; do cp "$file" dist/dist.tar.gz; break; done
+
 
 clean:
     rm -rf dist
