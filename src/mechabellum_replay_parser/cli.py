@@ -21,7 +21,7 @@ def show_tech(args):
         table.align = "l"
         table.field_names = ["Unit", "Techs"]
         for unit, techs in player.tech_choices.items():
-            table.add_row([unit, '\n'.join(techs)])
+            table.add_row([unit, "\n".join(techs)])
             table.add_divider()
         print(table)
         print()
@@ -31,11 +31,17 @@ def main():
     parser = argparse.ArgumentParser(description="Mechabellum replay file parser")
     subparsers = parser.add_subparsers(dest="command")
 
-    battle_parser = subparsers.add_parser("battle", help="Parse a Mechabellum replay file (.grbr)")
-    battle_parser.add_argument("file",  help="Path to the Mechabellum replay file (.grbr)")
+    battle_parser = subparsers.add_parser(
+        "battle", help="Parse a Mechabellum replay file (.grbr)"
+    )
+    battle_parser.add_argument(
+        "file", help="Path to the Mechabellum replay file (.grbr)"
+    )
     battle_parser.set_defaults(func=show_battle_record)
 
-    tech_parser = subparsers.add_parser("tech", help="Show tech information of both players in a replay file.")
+    tech_parser = subparsers.add_parser(
+        "tech", help="Show tech information of both players in a replay file."
+    )
     tech_parser.add_argument("file", help="Path to the Mechabellum replay file (.grbr)")
     tech_parser.set_defaults(func=show_tech)
 

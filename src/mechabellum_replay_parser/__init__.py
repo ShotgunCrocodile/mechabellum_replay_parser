@@ -2,7 +2,6 @@ import xml.etree.ElementTree
 import xml.etree.ElementTree as ET
 import re
 import json
-import argparse
 import copy
 from dataclasses import dataclass, field
 from typing import List, Optional, Union, Dict, Any
@@ -31,7 +30,7 @@ RESEARCH_TOWER_SKILLS = {
     2: "Field Recovery",
     3: "Mobile Beacon",
     4: "Attack Enhancement",
-    5: "Defence Enhancement",
+    5: "Defense Enhancement",
     401: "Attack Enhancement II",
     501: "Defense Enhancement II",
 }
@@ -53,10 +52,8 @@ OFFICER_LOOKUP = {
     20033: "Rhino Specialist",
     20034: "Cost Control Specialist",
     20035: "Heavy Armor Specialist",
-    20036: "Sabertooth Specialist",
     20038: "Fire Badger Specialist",
     20039: "Typhoon Specialist",
-
     # Other "officers" which are a combination of
     # unit upgrade cards and what used to be specialists.
     10001: "Quick Cooldown",
@@ -238,14 +235,12 @@ TECH_LOOKUP = {
     2710: "Acidic explosion",
     10710: "Impact drill",
     3510: "Loose formation",
-
     # Fang techs
     180209: "Ignite",
     10209: "Range enhancement",
     10509: "Mechanical rage",
     209: "Portable shield",
     10609: "Armor piercing bullets",
-
     # Fortress techs
     1001: "Barrier",
     10201: "Range enhancement",
@@ -256,7 +251,6 @@ TECH_LOOKUP = {
     701: "Doubleshot",
     3001: "Armor enhancement",
     110201: "Rocket punch",
-
     # Marksman techs
     702: "Doubleshot",
     10202: "Range enhancement",
@@ -266,7 +260,6 @@ TECH_LOOKUP = {
     1202: "Shooting squad",
     10102: "Assault mode",
     3202: "Aerial specialisation",
-
     # Vulcan techs
     180203: "Ignite",
     10203: "Range enhancement",
@@ -275,7 +268,6 @@ TECH_LOOKUP = {
     1203: "Best partner",
     11010: "Sticky oil bomb",
     3003: "Armor enhancement",
-
     # Melting point techs
     304: "Energy absorption",
     10204: "Range enhancement",
@@ -283,7 +275,6 @@ TECH_LOOKUP = {
     1106: "Electromagnetic barrage",
     1204: "Crawler production",
     3004: "Armor enhancement",
-
     # Rhino techs
     1109: "Whirlwind",
     180305: "Photon coating",
@@ -293,7 +284,6 @@ TECH_LOOKUP = {
     2305: "Wreckage recycling",
     2505: "Power armor",
     3005: "Armor enhancement",
-
     # Wasp techs
     206: "Energy shield",
     10206: "Range enhancement",
@@ -305,14 +295,12 @@ TECH_LOOKUP = {
     406: "High explosive ammo",
     10606: "Armor piercing bullets",
     3206: "Aerial specialization",
-
     # Mustang techs
     3307: "Missile interceptor",
     10207: "Range enhancement",
     407: "High explosive ammo",
     3207: "Aerial specialization",
     10607: "Armor piercing bullets",
-
     # Steel ball techs
     308: "Energy absorption",
     608: "Damage sharing",
@@ -320,7 +308,6 @@ TECH_LOOKUP = {
     1308: "Mechanical division",
     3008: "Armor enhancement",
     2408: "Fortified target lock",
-
     # Overlord techs
     1108: "Overlord artillery",
     10311: "Launcher overload",
@@ -331,7 +318,6 @@ TECH_LOOKUP = {
     3011: "Armor enhancement",
     911: "Field maintenance",
     411: "High explosive ammo",
-
     # Stormcaller techs
     812: "Incendiary bomb",
     10212: "Range enhancement",
@@ -339,7 +325,6 @@ TECH_LOOKUP = {
     412: "High explosive ammo",
     1812: "Electromagnetic explosion",
     10912: "High explosive anti tank shells",
-
     # Sledgehammer techs
     913: "Field maintenance",
     613: "Damage sharing",
@@ -348,14 +333,12 @@ TECH_LOOKUP = {
     1813: "Electromagnetic shot",
     10613: "Armor piercing bullets",
     3013: "Armor enhancement",
-
     # Hacker techs
     11014: "Multi control",
     1014: "Barrier",
     10214: "Range enhancement",
     1714: "Enhanced control",
     1814: "Electromagnetic interference",
-
     # Arclight techs
     10215: "Range enhancement",
     1815: "Electromagnetic shot",
@@ -363,7 +346,6 @@ TECH_LOOKUP = {
     3015: "Armor enhancement",
     3115: "Anti aircraft ammunition",
     10815: "Elite marksman",
-
     # Phoenix techs
     2916: "Quantum reassembly",
     10216: "Range enhancement",
@@ -373,7 +355,6 @@ TECH_LOOKUP = {
     1816: "Electromagnetic shot",
     10816: "Elite marksman",
     10916: "Charged shot",
-
     # War factory techs
     10217: "Range enhancement",
     3417: "Efficient maintenance",
@@ -385,7 +366,6 @@ TECH_LOOKUP = {
     180317: "Photon coating",
     3017: "Armor enhancement",
     417: "High explosive ammo",
-
     # Wraith techs
     110181: "Floating artillery array",
     10218: "Range enhancement",
@@ -393,7 +373,6 @@ TECH_LOOKUP = {
     180418: "Degeneration beam",
     918: "Field maintenance",
     418: "High explosive ammo",
-
     # Scorpion techs
     180519: "Acid attack",
     10019: "Siege mode",
@@ -401,27 +380,23 @@ TECH_LOOKUP = {
     719: "Doubleshot",
     919: "Field maintenance",
     3019: "Armor enhancement",
-
     # Fire badger techs
     10220: "Range enhancement",
     820: "Napalm",
     180220: "Ignite",
     920: "Field maintenance",
     10620: "Scorching fire",
-
     # Sabertooth techs
     10221: "Range enhancement",
     10321: "Field maintenance",
     3321: "Missile interceptor",
     721: "Doubleshot",
     110211: "Secondary Armament",
-
     # Typhoon techs
     3022: "Mechanical rage",
     3222: "Aerial specialisation",
     1022: "Barrier",
     11022: "Homing missile",
-
     # Sandworm techs
     10523: "Mechanical rage",
     3023: "Armor enhancement",
@@ -431,7 +406,6 @@ TECH_LOOKUP = {
     3623: "Replicate",
     3723: "Sandstorm",
     3823: "Strike",
-
     # Tarantula techs
     11024: "Spider mine",
     10224: "Range enhancement",
@@ -441,14 +415,12 @@ TECH_LOOKUP = {
     3024: "Armor enhancement",
     3124: "Anti aircraft ammunition",
     424: "High explosive ammo",
-
     # Farseer techs
     180326: "Photon emission",
     180526: "Scanning radar",
     3326: "Missile interceptor",
     1826: "Electromagnetic explosion",
     10226: "Range enhancement",
-
     # Phantom ray techs
     725: "Burst mode",
     10225: "Range enhancement",
@@ -457,7 +429,6 @@ TECH_LOOKUP = {
     3925: "Stealth cloak",
     425: "High explosive ammo",
     225: "Energy shield",
-
     # Raiden techs
     10227: "Range enhancement",
     4027: "Chain",
@@ -473,14 +444,14 @@ class Point:
     y: int
 
     @classmethod
-    def from_xml(cls, element: xml.etree.ElementTree.Element) -> 'Point':
+    def from_xml(cls, element: xml.etree.ElementTree.Element) -> "Point":
         return cls(
             x=int(element.find("x").text),
             y=int(element.find("y").text),
         )
 
     @classmethod
-    def default(cls) -> 'Point':
+    def default(cls) -> "Point":
         return cls(0, 0)
 
 
@@ -495,7 +466,7 @@ class Unit:
         return f"{self.unit_name}"
 
     @classmethod
-    def from_xml(cls, unit_element: xml.etree.ElementTree.Element) -> 'Unit':
+    def from_xml(cls, unit_element: xml.etree.ElementTree.Element) -> "Unit":
         return cls(
             unit_name=UNIT_LOOKUP.get(int(unit_element.find("id").text)),
             ident=int(unit_element.find("id").text),
@@ -504,17 +475,17 @@ class Unit:
         )
 
     @classmethod
-    def from_name(cls, name: str) -> 'Unit':
+    def from_name(cls, name: str) -> "Unit":
         data = UNIT_DATA.get(name)
 
         return cls(
             unit_name=name,
-            ident=data.get('ident'),
-            sell_supply=data.get('value'),
+            ident=data.get("ident"),
+            sell_supply=data.get("value"),
             position=Point.default(),
         )
 
-    def set_level(self, level: int) -> 'Unit':
+    def set_level(self, level: int) -> "Unit":
         upgrade_cost = self.sell_supply // 2
         base_value = UNIT_DATA.get(self.unit_name).get("value")
         self.sell_supply = base_value + (level - 1) * upgrade_cost
@@ -522,7 +493,7 @@ class Unit:
 
 
 SPECIAL_CASE_UNIT_SPAWNING = {
-    '1503': {
+    "1503": {
         (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
         (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
         (2, "Fire Badger Specialist"): Unit.from_name("fire badger"),
@@ -530,14 +501,14 @@ SPECIAL_CASE_UNIT_SPAWNING = {
         (4, "Typhoon Specialist"): Unit.from_name("typhoon"),
         (4, "Farseer Specialist"): Unit.from_name("farseer"),
     },
-    'default': {
+    "default": {
         (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
         (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
         (2, "Fire Badger Specialist"): Unit.from_name("fire badger"),
         (3, "Typhoon Specialist"): Unit.from_name("typhoon"),
         (3, "Farseer Specialist"): Unit.from_name("farseer"),
         (4, "Rhino Specialist"): Unit.from_name("rhino").set_level(2),
-    }
+    },
 }
 
 
@@ -547,7 +518,7 @@ class UnitCollection:
     next_index: int = 0
 
     @classmethod
-    def from_xml(cls, round_element: xml.etree.ElementTree.Element) -> 'UnitCollection':
+    def from_xml(cls, round_element: xml.etree.ElementTree.Element) -> "UnitCollection":
         units_element = round_element.find("playerData/units")
         units = cls()
         for unit_element in units_element.findall("NewUnitData"):
@@ -573,7 +544,7 @@ class UnitCollection:
     def __contains__(self, index: int) -> bool:
         return index in self.units
 
-    def copy(self) -> 'UnitCollection':
+    def copy(self) -> "UnitCollection":
         return copy.deepcopy(self)
 
 
@@ -610,7 +581,11 @@ class DeviceAction:
 
     @classmethod
     def from_xml(cls, action_element: xml.etree.ElementTree.Element):
-        return cls(device=CONTRAPTION_LOOKUP.get(int(action_element.find("ContraptionID").text)))
+        return cls(
+            device=CONTRAPTION_LOOKUP.get(
+                int(action_element.find("ContraptionID").text)
+            )
+        )
 
 
 @dataclass
@@ -639,7 +614,9 @@ class UpgradeAction:
         return f"Upgrade {self.unit}"
 
     @classmethod
-    def from_xml(cls, action_element: xml.etree.ElementTree.Element, units: UnitCollection):
+    def from_xml(
+        cls, action_element: xml.etree.ElementTree.Element, units: UnitCollection
+    ):
         # TODO: Bug here: sometimes the upgraded unit is not in the list for some reason.
         # typically its out of bounds by 1 past the last unit. Buying and selling may shift
         # the unit data and I am not accounting for that. Upgrades done at the beginning of a turn
@@ -695,21 +672,24 @@ class UnitDrop:
         return f"Unit Drop: {self.count} level {self.level} {self.unit}"
 
     @classmethod
-    def from_round_number_and_identifier(cls, round_number: int, identifier: int) -> 'UnitDrop':
+    def from_round_number_and_identifier(
+        cls, round_number: int, identifier: int
+    ) -> "UnitDrop":
         unit_drop_data = str(identifier)
-        unit_drop_regex = re.compile(r'1{:02d}(?P<count>\d)(?P<level>\d)(?P<unit>\d+)'.format(round_number))
+        unit_drop_regex = re.compile(
+            r"1{:02d}(?P<count>\d)(?P<level>\d)(?P<unit>\d+)".format(round_number)
+        )
         match = unit_drop_regex.match(unit_drop_data)
-        data = {
-            k: int(v)
-            for (k, v) in match.groupdict().items()
-        }
-        data['unit'] = UNIT_LOOKUP.get(data['unit'])
-        data['round'] = round_number
+        data = {k: int(v) for (k, v) in match.groupdict().items()}
+        data["unit"] = UNIT_LOOKUP.get(data["unit"])
+        data["round"] = round_number
         return cls(**data)
 
     @classmethod
     def from_xml(cls, round_number: int, action_element: xml.etree.ElementTree.Element):
-        return cls.from_round_number_and_identifier(round_number, int(action_element.find("ID").text))
+        return cls.from_round_number_and_identifier(
+            round_number, int(action_element.find("ID").text)
+        )
 
 
 @dataclass
@@ -735,7 +715,9 @@ class SkillAction:
         return f"Use Skill: {self.skill_name}"
 
     @classmethod
-    def from_xml(cls, action_element: xml.etree.ElementTree.Element, skills: 'SkillCollection'):
+    def from_xml(
+        cls, action_element: xml.etree.ElementTree.Element, skills: "SkillCollection"
+    ):
         # The game supposedly uses the <id> field to track which skill is being used. However, in practice
         # a lot of times this field is simply set to 0 for unknown reasons. Instead of relying on this field
         # we can use the <SkillIndex> field to determine the index in the player's skill list of the skill.
@@ -749,6 +731,7 @@ class SkillAction:
             target_unit_index=int(unit_index.text) if unit_index is not None else None,
         )
 
+
 @dataclass
 class MoveUnitAction:
     unit_index: int
@@ -756,7 +739,9 @@ class MoveUnitAction:
     position: Point
 
     @classmethod
-    def from_xml(cls, action_element: xml.etree.ElementTree.Element) -> 'MoveUnitAction':
+    def from_xml(
+        cls, action_element: xml.etree.ElementTree.Element
+    ) -> "MoveUnitAction":
         move_element = action_element.find("moveUnitDatas/MoveUnitData")
         return cls(
             unit_index=int(move_element.find("unitIndex").text),
@@ -786,7 +771,9 @@ class SkillCollection:
     next_index: int = 0
 
     @classmethod
-    def from_xml(cls, round_element: xml.etree.ElementTree.Element) -> 'SkillCollection':
+    def from_xml(
+        cls, round_element: xml.etree.ElementTree.Element
+    ) -> "SkillCollection":
         commander_skills_element = round_element.find("playerData/commanderSkills")
         collection = cls()
         for skill_element in commander_skills_element.findall("CommanderSkillData"):
@@ -806,22 +793,26 @@ class SkillCollection:
         # Not worth attaching metadata to the various actions yet to determine their type, just to avoid a
         # special case here. It eventually may be worth it though if the metadata was used elsewhere.
         if isinstance(action, ResearchCenterTowerAction):
-            if action.skill_name in ('Oil Bomb', 'Field Recovery', 'Mobile Beacon'):
+            if action.skill_name in ("Oil Bomb", "Field Recovery", "Mobile Beacon"):
                 self.add_skill(action.skill_name)
         elif isinstance(action, ReinforcementSelection):
             if action.card_name in SKILL_LOOKUP.values():
                 self.add_skill(action.card_name)
 
     def get_skill(self, skill_index: int) -> str:
-        return self.skills.get(skill_index, f"unknown skill (invalid index {skill_index}")
+        return self.skills.get(
+            skill_index, f"unknown skill (invalid index {skill_index}"
+        )
 
 
 def create_action_from_xml_element(
-        action_element: xml.etree.ElementTree.Element,
-        units: Dict[int, str],
-        round_number: int,
-        reinforce_rounds: List[int],  # If the number of extra arguments grows past reinforce_rounds
-        skills: SkillCollection,      # and skills, then they should be wrapped in a CreateActionContext class.
+    action_element: xml.etree.ElementTree.Element,
+    units: Dict[int, str],
+    round_number: int,
+    reinforce_rounds: List[
+        int
+    ],  # If the number of extra arguments grows past reinforce_rounds
+    skills: SkillCollection,  # and skills, then they should be wrapped in a CreateActionContext class.
 ) -> Optional[PlayerAction]:
     action_type = action_element.get("{http://www.w3.org/2001/XMLSchema-instance}type")
     if action_type == "PAD_BuyUnit":
@@ -866,7 +857,9 @@ class DeploymentTracker:
     units: List[UnitCollection] = field(default_factory=list)
 
     @classmethod
-    def from_record_list(cls, version: str, officer: str, records: List[PlayerRoundRecord]) -> 'DeploymentTracker':
+    def from_record_list(
+        cls, version: str, officer: str, records: List[PlayerRoundRecord]
+    ) -> "DeploymentTracker":
         tracker = cls(count=[5], value=[700])
         # This is a little confusing since record_number and record.round seem to be used
         # interchangeably. record.round is the actual in game round, even in the event that
@@ -885,7 +878,10 @@ class DeploymentTracker:
                     tracker.buy(record_number, action, units)
                 elif isinstance(action, UpgradeAction):
                     tracker.upgrade(record_number, action)
-                elif isinstance(action, SkillAction) and action.skill_name == "Field Recovery":
+                elif (
+                    isinstance(action, SkillAction)
+                    and action.skill_name == "Field Recovery"
+                ):
                     tracker.sell(record_number, action, units)
                 elif isinstance(action, UnitDrop):
                     tracker.process_unit_drop(record_number, action, units)
@@ -895,9 +891,13 @@ class DeploymentTracker:
         return tracker
 
     @classmethod
-    def _pre_action_unit_setup(cls, version: str, round_number: int, officer: str, units: UnitCollection):
+    def _pre_action_unit_setup(
+        cls, version: str, round_number: int, officer: str, units: UnitCollection
+    ):
         # There are some special cases to take care of before we process user actions
-        cases = SPECIAL_CASE_UNIT_SPAWNING.get(version, SPECIAL_CASE_UNIT_SPAWNING['default'])
+        cases = SPECIAL_CASE_UNIT_SPAWNING.get(
+            version, SPECIAL_CASE_UNIT_SPAWNING["default"]
+        )
         key = (round_number, officer)
         unit = cases.get(key)
 
@@ -919,7 +919,9 @@ class DeploymentTracker:
         units.add_unit(Unit.from_name(buy.unit))
 
     def upgrade(self, round_number: int, upgrade: UpgradeAction):
-        self.value[round_number] += UNIT_DATA.get(upgrade.unit.unit_name).get("value") // 2
+        self.value[round_number] += (
+            UNIT_DATA.get(upgrade.unit.unit_name).get("value") // 2
+        )
         # TODO: Potentially better here to update the UnitCollection and then
         # at the end of a turn we can total the units' SellSupply values. This will
         # keep everything consistent and have a single source of truth.
@@ -930,7 +932,9 @@ class DeploymentTracker:
         self.value[round_number] -= sold_unit.sell_supply
         units.delete_unit(sell.target_unit_index)
 
-    def process_unit_drop(self, round_number: int, drop: UnitDrop, units: UnitCollection):
+    def process_unit_drop(
+        self, round_number: int, drop: UnitDrop, units: UnitCollection
+    ):
         self.count[round_number] += drop.count
         for i in range(drop.count):
             new_unit = Unit.from_name(drop.unit).set_level(drop.level)
@@ -967,20 +971,20 @@ class BattleRecord:
 
 def extract_xml(file_path: Path) -> str:
     """Extracts the XML portion from a file containing a binary blob with XML content."""
-    with open(file_path, 'rb') as file:
+    with open(file_path, "rb") as file:
         content = file.read()
 
     # Locate the XML start and end of the XML embedded in the binary file.
-    start = content.find(b'<?xml')
+    start = content.find(b"<?xml")
     # The name of the players appears in the footer of the file in binary. If we just search for > a player name with
     # > in it will be found and give us incorrect xml boundaries. We search for BattleRecord> instead to give a more
     # unique sentinel value to look for. If a player has that in their name they deserve to have their
     # replays be un-parsable.
-    end = content.rfind(b'BattleRecord>') + 13
+    end = content.rfind(b"BattleRecord>") + 13
     if start == -1 or end == -1:
         raise ValueError("No XML content found in the file.")
 
-    return content[start:end].decode('utf-8')
+    return content[start:end].decode("utf-8")
 
 
 def parse_battle_record(file_path: Path) -> BattleRecord:
@@ -997,7 +1001,9 @@ def parse_battle_record(file_path: Path) -> BattleRecord:
     # Iterate through all MatchSnapshotData elements
     for snapshot in root.findall("matchDatas/MatchSnapshotData"):
         # Extract reinforcement rounds from the current snapshot
-        rounds = [int(node.text) for node in snapshot.findall("unitReinforceRounds/int")]
+        rounds = [
+            int(node.text) for node in snapshot.findall("unitReinforceRounds/int")
+        ]
 
         # If we found values, store them and stop searching
         # Sometimes these are empty for some reason in round 0, so we can't just assume
@@ -1020,12 +1026,15 @@ def parse_battle_record(file_path: Path) -> BattleRecord:
         # Parse their tech choices
         unit_datas_element = player_element.find("data/unitDatas")
         unit_data = {
-            UNIT_LOOKUP.get(int(data_element.find("id").text), data_element.find("id").text): [
+            UNIT_LOOKUP.get(
+                int(data_element.find("id").text), data_element.find("id").text
+            ): [
                 TECH_LOOKUP.get(int(tech_element.get("data")), tech_element.get("data"))
                 for tech_element in data_element.find("techs").findall("tech")
             ]
             for data_element in unit_datas_element.findall("unitData")
-            if data_element.find("id").text != "2001"  # For now a special case for death knell to just keep it out.
+            if data_element.find("id").text
+            != "2001"  # For now a special case for death knell to just keep it out.
         }
 
         # Parse round records
@@ -1057,23 +1066,29 @@ def parse_battle_record(file_path: Path) -> BattleRecord:
                     starting_officer = _parse_round_officers(round_element)[0]
                     extracted_starting_units_and_officer = True
 
-                action_records = _parse_actions(round_element, round_number, reinforce_rounds)
-                round_records.append(PlayerRoundRecord(
-                    round=round_number,
-                    player_hp=player_hp,
-                    starting_units=units,
-                    actions=action_records,
-                ))
+                action_records = _parse_actions(
+                    round_element, round_number, reinforce_rounds
+                )
+                round_records.append(
+                    PlayerRoundRecord(
+                        round=round_number,
+                        player_hp=player_hp,
+                        starting_units=units,
+                        actions=action_records,
+                    )
+                )
 
-        player_records.append(PlayerRecord(
-            version=root.find("Version").text,
-            id=player_id,
-            name=player_name,
-            round_records=round_records,
-            starting_units=starting_units,
-            starting_officer=starting_officer,
-            tech_choices=unit_data,
-        ))
+        player_records.append(
+            PlayerRecord(
+                version=root.find("Version").text,
+                id=player_id,
+                name=player_name,
+                round_records=round_records,
+                starting_units=starting_units,
+                starting_officer=starting_officer,
+                tech_choices=unit_data,
+            )
+        )
 
     return BattleRecord(
         version=root.find("Version").text,
@@ -1082,17 +1097,18 @@ def parse_battle_record(file_path: Path) -> BattleRecord:
 
 
 def _parse_actions(
-        round_element: xml.etree.ElementTree.Element,
-        round_number: int,
-        reinforce_rounds: List[int],
+    round_element: xml.etree.ElementTree.Element,
+    round_number: int,
+    reinforce_rounds: List[int],
 ):
     action_records = []
     units = UnitCollection.from_xml(round_element)
     skills = SkillCollection.from_xml(round_element)
 
     for action_element in round_element.findall("actionRecords/MatchActionData"):
-
-        action = create_action_from_xml_element(action_element, units, round_number, reinforce_rounds, skills)
+        action = create_action_from_xml_element(
+            action_element, units, round_number, reinforce_rounds, skills
+        )
         skills.add_skill_from_action(action)
         if action is not None:
             action_records.append(action)
@@ -1119,25 +1135,29 @@ def _setup_pretty_table_with_players(players: List[PlayerRecord]):
 
 
 def _player_start_to_string(player: PlayerRecord) -> str:
-    return "\n".join([player.starting_officer] + [
-        unit.unit_name
-        for unit in player.starting_units.units.values()
-    ])
+    return "\n".join(
+        [player.starting_officer]
+        + [unit.unit_name for unit in player.starting_units.units.values()]
+    )
 
 
 def battle_record_to_string(battle_record: BattleRecord) -> str:
     """Displays the battle record in a tabular format."""
-    max_rounds = max(len(player.round_records) for player in battle_record.player_records)
+    max_rounds = max(
+        len(player.round_records) for player in battle_record.player_records
+    )
     table = _setup_pretty_table_with_players(battle_record.player_records)
 
-    table.add_row(["0"] + [_player_start_to_string(player) for player in battle_record.player_records])
+    table.add_row(
+        ["0"]
+        + [_player_start_to_string(player) for player in battle_record.player_records]
+    )
 
     for i, round_idx in enumerate(range(max_rounds)[1:]):
         players_actions = []
         for player in battle_record.player_records:
             player_actions = []
             if round_idx < len(player.round_records):
-
                 # Grab the player HP and put it at the top of the list of actions for the round.
                 player_hp = str(player.round_records[round_idx].player_hp)
                 player_hp_line = f"HP: {player_hp}"
@@ -1165,5 +1185,3 @@ def battle_record_to_string(battle_record: BattleRecord) -> str:
         table.add_row([f"{i + 1}"] + [actions for actions in players_actions])
 
     return table
-
-
