@@ -133,5 +133,10 @@
         "ident": 27,
         "name": "raiden",
         "value": 400
+    },
+    "hound": {
+        "ident": 28,
+        "name": "hound",
+        "value": 100
     }
 }

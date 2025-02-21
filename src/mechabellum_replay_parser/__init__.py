@@ -223,6 +223,7 @@ UNIT_LOOKUP = {
     25: "phantom ray",
     26: "farseer",
     27: "raiden",
+    28: "hound",
 }
 
 UNIT_DATA = _load_data_file("unit_data.json")
@@ -492,7 +493,18 @@ class Unit:
         return self
 
 
+# TODO fix this to not be fragile between version updates
+# currently it defaults to the old setup for a new version whereas it should
+# default to the latest.
 SPECIAL_CASE_UNIT_SPAWNING = {
+    "1526": {
+        (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
+        (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
+        (2, "Fire Badger Specialist"): Unit.from_name("fire badger"),
+        (4, "Rhino Specialist"): Unit.from_name("rhino").set_level(2),
+        (4, "Typhoon Specialist"): Unit.from_name("typhoon"),
+        (4, "Farseer Specialist"): Unit.from_name("farseer"),
+    },
     "1503": {
         (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
         (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
@@ -920,7 +932,7 @@ class DeploymentTracker:
 
     def upgrade(self, round_number: int, upgrade: UpgradeAction):
         self.value[round_number] += (
-            UNIT_DATA.get(upgrade.unit.unit_name).get("value") // 2
+            UNIT_DATA.get(upgrade.unit.unit_name, {}).get("value", 0) // 2
         )
         # TODO: Potentially better here to update the UnitCollection and then
         # at the end of a turn we can total the units' SellSupply values. This will
