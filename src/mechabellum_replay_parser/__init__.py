@@ -497,6 +497,14 @@ class Unit:
 # currently it defaults to the old setup for a new version whereas it should
 # default to the latest.
 SPECIAL_CASE_UNIT_SPAWNING = {
+    "1527": {
+        (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
+        (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
+        (2, "Fire Badger Specialist"): Unit.from_name("fire badger"),
+        (4, "Rhino Specialist"): Unit.from_name("rhino").set_level(2),
+        (4, "Typhoon Specialist"): Unit.from_name("typhoon"),
+        (4, "Farseer Specialist"): Unit.from_name("farseer"),
+    },
     "1526": {
         (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
         (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
