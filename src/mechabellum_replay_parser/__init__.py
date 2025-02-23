@@ -493,43 +493,25 @@ class Unit:
         return self
 
 
-# TODO fix this to not be fragile between version updates
-# currently it defaults to the old setup for a new version whereas it should
-# default to the latest.
-SPECIAL_CASE_UNIT_SPAWNING = {
-    "1527": {
-        (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
-        (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
-        (2, "Fire Badger Specialist"): Unit.from_name("fire badger"),
-        (4, "Rhino Specialist"): Unit.from_name("rhino").set_level(2),
-        (4, "Typhoon Specialist"): Unit.from_name("typhoon"),
-        (4, "Farseer Specialist"): Unit.from_name("farseer"),
-    },
-    "1526": {
-        (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
-        (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
-        (2, "Fire Badger Specialist"): Unit.from_name("fire badger"),
-        (4, "Rhino Specialist"): Unit.from_name("rhino").set_level(2),
-        (4, "Typhoon Specialist"): Unit.from_name("typhoon"),
-        (4, "Farseer Specialist"): Unit.from_name("farseer"),
-    },
-    "1503": {
-        (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
-        (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
-        (2, "Fire Badger Specialist"): Unit.from_name("fire badger"),
-        (4, "Rhino Specialist"): Unit.from_name("rhino").set_level(2),
-        (4, "Typhoon Specialist"): Unit.from_name("typhoon"),
-        (4, "Farseer Specialist"): Unit.from_name("farseer"),
-    },
-    "default": {
-        (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
-        (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
-        (2, "Fire Badger Specialist"): Unit.from_name("fire badger"),
-        (3, "Typhoon Specialist"): Unit.from_name("typhoon"),
-        (3, "Farseer Specialist"): Unit.from_name("farseer"),
-        (4, "Rhino Specialist"): Unit.from_name("rhino").set_level(2),
-    },
-}
+def _get_special_case_unit_spawning(version: str) -> dict[tuple[int, str], Unit]:
+    if int(version) < 1503:
+        return {
+            (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
+            (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
+            (2, "Fire Badger Specialist"): Unit.from_name("fire badger"),
+            (3, "Typhoon Specialist"): Unit.from_name("typhoon"),
+            (3, "Farseer Specialist"): Unit.from_name("farseer"),
+            (4, "Rhino Specialist"): Unit.from_name("rhino").set_level(2),
+        }
+    else:
+        return {
+            (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
+            (2, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
+            (2, "Fire Badger Specialist"): Unit.from_name("fire badger"),
+            (4, "Rhino Specialist"): Unit.from_name("rhino").set_level(2),
+            (4, "Typhoon Specialist"): Unit.from_name("typhoon"),
+            (4, "Farseer Specialist"): Unit.from_name("farseer"),
+        }
 
 
 @dataclass
@@ -915,9 +897,8 @@ class DeploymentTracker:
         cls, version: str, round_number: int, officer: str, units: UnitCollection
     ):
         # There are some special cases to take care of before we process user actions
-        cases = SPECIAL_CASE_UNIT_SPAWNING.get(
-            version, SPECIAL_CASE_UNIT_SPAWNING["default"]
-        )
+        cases = _get_special_case_unit_spawning(version)
+
         key = (round_number, officer)
         unit = cases.get(key)
 
