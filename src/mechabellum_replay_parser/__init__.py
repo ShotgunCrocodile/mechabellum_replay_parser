@@ -512,11 +512,20 @@ def _get_special_case_unit_spawning(version: str) -> dict[tuple[int, str], Unit]
             (4, "Typhoon Specialist"): Unit.from_name("typhoon"),
             (4, "Farseer Specialist"): Unit.from_name("farseer"),
         }
-    else:  # new in version 1532
+    elif int(version) <= 1532:  # new in version 1532
         return {
             (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
             (1, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
             (1, "Fire Badger Specialist"): Unit.from_name("fire badger"),
+            (4, "Rhino Specialist"): Unit.from_name("rhino").set_level(2),
+            (4, "Typhoon Specialist"): Unit.from_name("typhoon"),
+            (4, "Farseer Specialist"): Unit.from_name("farseer"),
+        }
+    else:
+        return {
+            (2, "Marksman Specialist"): Unit.from_name("marksmen").set_level(3),
+            (3, "Sabertooth Specialist"): Unit.from_name("sabertooth"),
+            (3, "Fire Badger Specialist"): Unit.from_name("fire badger"),
             (4, "Rhino Specialist"): Unit.from_name("rhino").set_level(2),
             (4, "Typhoon Specialist"): Unit.from_name("typhoon"),
             (4, "Farseer Specialist"): Unit.from_name("farseer"),
