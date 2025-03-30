@@ -732,7 +732,8 @@ class SkillAction:
     target_unit_index: Optional[int] = None
 
     def __str__(self) -> str:
-        return f"Use Skill: {self.skill_name}"
+        postfix = f" {self.target_unit_index}" if self.target_unit_index is not None else ""
+        return f"Use Skill: {self.skill_name}{postfix}"
 
     @classmethod
     def from_xml(
@@ -1018,7 +1019,7 @@ def parse_battle_record(file_path: Path) -> BattleRecord:
     reinforce_rounds = []
 
     # Iterate through all MatchSnapshotData elements
-    for snapshot in root.findall("matchDatas/MatchSnapshotData"):
+    for snapshot in reversed(root.findall("matchDatas/MatchSnapshotData")):
         # Extract reinforcement rounds from the current snapshot
         rounds = [
             int(node.text) for node in snapshot.findall("unitReinforceRounds/int")
@@ -1028,6 +1029,10 @@ def parse_battle_record(file_path: Path) -> BattleRecord:
         # Sometimes these are empty for some reason in round 0, so we can't just assume
         # it will always be in a particular round. I assume it will always be in at
         # the very least the first round the drops arrive.
+        # New development since version 1571: the rounds are no longer fully described.
+        # The list contains only the set of reinforcement rounds that have all ready
+        # occurred including the current round. So to get all the reinforcement rounds
+        # we need to start at the last round.
         if rounds:
             reinforce_rounds = rounds
             break
