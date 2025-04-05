@@ -138,5 +138,10 @@
         "ident": 28,
         "name": "hound",
         "value": 100
+    },
+    "abyss": {
+        "ident": 29,
+        "name": "abyss",
+        "value": 800
     }
 }

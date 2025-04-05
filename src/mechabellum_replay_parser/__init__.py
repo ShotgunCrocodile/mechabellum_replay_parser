@@ -224,6 +224,7 @@ UNIT_LOOKUP = {
     26: "farseer",
     27: "raiden",
     28: "hound",
+    29: "abyss",
 }
 
 UNIT_DATA = _load_data_file("unit_data.json")
@@ -436,8 +437,25 @@ TECH_LOOKUP = {
     110271: "Fork",
     1827: "Electromagnetic Shot",
     4127: "Ionization",
+    # Hound techs
+    10228: "Mechanical rage",
+    10528: "Enhanced range",
+    4228: "Fire extinguisher",
+    11028: "Incendiary bomb",
+    3028: "Armor enhancement",
+    # Abyss techs
+    10299: "Range enhancement",
+    12029: "Dark companion",
+    3429: "Efficient maintenance",
+    11029: "Disintegration",
+    110291: "Swarm missiles",
+    4329: "Vertical sweep",
+    2329: "Wreckage recycling",
+    180329: "Photon coating"
 }
 
+# 2001 death knell
+# 2002 mountain
 
 @dataclass
 class Point:
