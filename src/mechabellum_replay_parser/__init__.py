@@ -451,11 +451,12 @@ TECH_LOOKUP = {
     110291: "Swarm missiles",
     4329: "Vertical sweep",
     2329: "Wreckage recycling",
-    180329: "Photon coating"
+    180329: "Photon coating",
 }
 
 # 2001 death knell
 # 2002 mountain
+
 
 @dataclass
 class Point:
@@ -750,7 +751,9 @@ class SkillAction:
     target_unit_index: Optional[int] = None
 
     def __str__(self) -> str:
-        postfix = f" {self.target_unit_index}" if self.target_unit_index is not None else ""
+        postfix = (
+            f" {self.target_unit_index}" if self.target_unit_index is not None else ""
+        )
         return f"Use Skill: {self.skill_name}{postfix}"
 
     @classmethod
